@@ -733,28 +733,27 @@ class InstagramAPI:
             'User-Agent': self.USER_AGENT})
 
         LOGGER.debug("%s call to %s %s", "POST" if post else "GET", endpoint, post)
-        if post is not None:  # POST
-            response = self.s.post(self.API_URL + endpoint, data=post)  # , verify=False
-        else:  # GET
-            response = self.s.get(self.API_URL + endpoint)  # , verify=False
 
-        # response.raise_for_status()
 
-        if response.status_code == 200:
-            self.LastResponse = response
-            self.LastJson = json.loads(response.text)
-            LOGGER.debug("Successful response: %s", str(response.text)[:])
-            return True
-        else:
-            LOGGER.error('Request returned HTTP Error Code %s', response.status_code)
+        try:
+            if post is not None:  # POST
+                response = self.s.post(self.API_URL + endpoint, data=post)  # , verify=False
+            else:  # GET
+                response = self.s.get(self.API_URL + endpoint)  # , verify=False
+        except requests.RequestException as re:
+            LOGGER.info("Request failed: %s", re)
+            raise
 
-            # for debugging
-            try:
-                self.LastResponse = response
-                self.LastJson = json.loads(response.text)
-            except:
-                pass
-            return False
+        try:
+            response.raise_for_status()
+        except requests.RequestException as re:
+            LOGGER.info("Request returned HTTP Error Code %s: (%s)", response.status_code, response.text)
+            raise
+
+        self.LastResponse = response
+        self.LastJson = json.loads(response.text)
+        LOGGER.debug("Successful response: %s", str(response.text)[:])
+        return True
 
     # TODO: Replace with iterator.
     def getTotalFollowers(self, usernameId):

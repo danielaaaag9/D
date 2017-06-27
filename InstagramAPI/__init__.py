@@ -3,6 +3,7 @@
 
 import requests
 import json
+import logging
 import hashlib
 import hmac
 import urllib
@@ -27,6 +28,9 @@ except:
 
 from requests_toolbelt import MultipartEncoder
 from moviepy.editor import VideoFileClip
+
+
+LOGGER = logging.getLogger('InstagramAPI')
 
 
 class InstagramAPI:
@@ -60,10 +64,6 @@ class InstagramAPI:
         self.setUser(username, password)
         self.isLoggedIn = False
         self.LastResponse = None
-        self.username = None
-        self.password = None
-        self.uuid = None
-        self.s = None
 
     def setUser(self, username, password):
         self.username = username
@@ -729,6 +729,8 @@ class InstagramAPI:
             'Cookie2': '$Version=1',
             'Accept-Language': 'en-US',
             'User-Agent': self.USER_AGENT})
+
+        LOGGER.debug("%s call to %s %s", "POST" if post else "GET", endpoint, post)
         if post is not None:  # POST
             response = self.s.post(self.API_URL + endpoint, data=post)  # , verify=False
         else:  # GET

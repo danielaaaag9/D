@@ -30,7 +30,14 @@ It is still a work in progress to copy all of its API endpoints.
     `pip install -r requirements.txt`
 
 
-4. Modify test.py with your own username and password
+4. If you want to run the examples or tests, create a file in the
+   examples directory called "credentials.py", which contains:
+
+   ````
+   USERNAME = "your_instagram_user_name"
+   PASSWORD = "your_instagram_password"
+   ````
+
 
 
 5. Run the test script (**use text editor to edit the script and type in valid Instagram username/password**)

@@ -35,6 +35,11 @@ try:
 except:  # imageio.core.fetching.NeedDownloadError
     LOGGER.warning("moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
 
+try:
+    import credentials
+except:
+    pass  # Only here because of the weird __init__.py structure.
+
 
 class InstagramAPI:
 
@@ -752,7 +757,7 @@ class InstagramAPI:
 
         self.LastResponse = response
         self.LastJson = json.loads(response.text)
-        LOGGER.debug("Successful response: %s", str(response.text)[:])
+        LOGGER.debug("Successful response: %s", str(response.text))
         return True
 
     # TODO: Replace with iterator.

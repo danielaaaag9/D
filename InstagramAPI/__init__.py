@@ -580,7 +580,7 @@ class InstagramAPI:
                 '&max_id=' + str(maxid))
 
     def getSelfUserFollowers(self, maxid=''):
-        return self.getUserFollowers(self.username_id, maxid='')
+        return self.getUserFollowers(self.username_id, maxid=maxid)
 
     def like(self, mediaId):
         data = json.dumps({
@@ -742,9 +742,11 @@ class InstagramAPI:
         if response.status_code == 200:
             self.LastResponse = response
             self.LastJson = json.loads(response.text)
+            LOGGER.debug("Successful response: %s", str(response.text)[:])
             return True
         else:
-            print("Request return " + str(response.status_code) + " error!")
+            LOGGER.error('Request returned HTTP Error Code %s', response.status_code)
+
             # for debugging
             try:
                 self.LastResponse = response

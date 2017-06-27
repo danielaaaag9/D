@@ -13,7 +13,7 @@ count      = 100
 
 API = InstagramAPI(username,pwd)
 API.login()
-API.getUsernameInfo()
+API.getUsernameInfo()  # TODO: This is an invalid call. Remove?
 has_more_comments = True
 max_id            = ''
 comments          = []
@@ -29,7 +29,7 @@ while has_more_comments:
         comments = comments[:count]
         #stop loop
         has_more_comments = False
-        print "stopped by count"
+        print("stopped by count")
     if until_date:
         older_comment = comments[-1]
         dt=datetime.utcfromtimestamp(older_comment.get('created_at_utc',0))
@@ -43,7 +43,7 @@ while has_more_comments:
             ]
             #stop loop
             has_more_comments = False
-            print "stopped by until_date"
+            print( "stopped by until_date")
     #next page
     if has_more_comments:
         max_id = API.LastJson.get('next_max_id','')

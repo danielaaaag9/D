@@ -177,8 +177,8 @@ class InstagramAPI:
                 'application/octet-stream',
                 {'Content-Transfer-Encoding': 'binary'})
         }
-        m = MultipartEncoder(data, boundary=self._uuid)
-        self._session.headers.update({
+
+        headers = {
             'X-IG-Capabilities': '3Q4=',
             'X-IG-Connection-Type': 'WIFI',
             'Cookie2': '$Version=1',
@@ -186,14 +186,15 @@ class InstagramAPI:
             'Accept-Encoding': 'gzip, deflate',
             'Content-type': m.content_type,
             'Connection': 'close',
-            'User-Agent': self.USER_AGENT})
-        response = self._session.post(self.API_URL + "upload/photo/", data=m.to_string())
-        if response.status_code == 200:
-            if self.configure(upload_id, photo, caption):
-                self.expose()
-        return False
+            'User-Agent': self.USER_AGENT}
+        m = MultipartEncoder(data, boundary=self._uuid)
+        self._session.post("upload/photo/", data=m.to_string(), headers=header)
+        if self.configure(upload_id, photo, caption):
+            self.expose()
 
     def uploadVideo(self, video, thumbnail, caption=None, upload_id=None):
+
+        # TODO: Migrate to use _sendrequest.
         if upload_id is None:
             upload_id = str(int(time.time() * 1000))
         data = {
@@ -256,9 +257,12 @@ class InstagramAPI:
         return False
 
     def direct_share(self, media_id, recipients, text=None):
+        # TODO: Support video as well as photo. Support threads.
+        # TODO: Indicate recipients must be pks, not user names.
         if type(recipients) != type([]):  # TODO: Replace with call to isinstance.
             recipients = [str(recipients)]
         recipient_users = '"",""'.join(str(r) for r in recipients)
+        print("Recipient users", recipient_users)
         endpoint = 'direct_v2/threads/broadcast/media_share/?media_type=photo'
         boundary = self._uuid
         bodies = [
@@ -289,8 +293,7 @@ class InstagramAPI:
             },
         ]
         data = self.buildBody(bodies, boundary)
-        self._session.headers.update(
-            {
+        headers = {
                 'User-Agent': self.USER_AGENT,
                 'Proxy-Connection': 'keep-alive',
                 'Connection': 'keep-alive',
@@ -298,23 +301,7 @@ class InstagramAPI:
                 'Content-Type': 'multipart/form-data; boundary={}'.format(boundary),
                 'Accept-Language': 'en-en',
             }
-        )
-        # self.SendRequest(endpoint,post=data) #overwrites 'Content-type' header and boundary is missed
-        response = self._session.post(self.API_URL + endpoint, data=data)
-        
-        if response.status_code == 200:
-            self.LastResponse = response
-            self.LastJson = json.loads(response.text)
-            return True
-        else:
-            print("Request return " + str(response.status_code) + " error!")
-            # for debugging
-            try:
-                self.LastResponse = response
-                self.LastJson = json.loads(response.text)
-            except:
-                pass
-            return False
+        self._sendrequest(endpoint,post=data, headers=headers)
 
     def configureVideo(self, upload_id, video, thumbnail, caption=''):
         clip = VideoFileClip(video)
@@ -727,12 +714,13 @@ class InstagramAPI:
         body += u'--{boundary}--'.format(boundary=boundary)
         return body
     
-    def _sendrequest(self, endpoint, post=None, login=False):
+    def _sendrequest(self, endpoint, post=None, login=False, headers=None):
 
         """
         :param endpoint: URL to call 
         :param post: data to HTTP POST. If None, do a GET call.
         :param login: if True, this is a call to login, so no need to check we are logged in.
+        :param headers: if not None, override default headers
         :return: tuple: (full_response, extracted dictionary of JSON part) of the response from Instagram
          
         TODO: most clients will only need one or the other of the responses. Can we simplify?
@@ -745,30 +733,29 @@ class InstagramAPI:
         if not self._isloggedin and not login:
             raise InstagramAPI.AuthenticationError("Not logged in.")
 
-        self._session.headers.update({
+        headers = headers or {
             'Connection': 'close',
             'Accept': '*/*',
             'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Cookie2': '$Version=1',
             'Accept-Language': 'en-US',
-            'User-Agent': self.USER_AGENT})
+            'User-Agent': self.USER_AGENT}
+        self._session.headers.update(headers)
 
         LOGGER.debug("%s call to %s %s", "POST" if post else "GET", endpoint, post)
-
-
         try:
             if post is not None:  # POST
                 response = self._session.post(self.API_URL + endpoint, data=post)  # , verify=False
             else:  # GET
                 response = self._session.get(self.API_URL + endpoint)  # , verify=False
         except requests.RequestException as re:
-            LOGGER.info("Request failed: %s", re)
+            LOGGER.info("Call to Instagram failed: %s", re)
             raise
 
         try:
             response.raise_for_status()
         except requests.RequestException as re:
-            LOGGER.info("Request returned HTTP Error Code %s: (%s)", response.status_code, response.text)
+            LOGGER.info("Instagram returned HTTP Error Code %s: (%s)", response.status_code, response.text)
             raise
 
         json_dict = json.loads(response.text)
@@ -776,7 +763,7 @@ class InstagramAPI:
         # Here for legacy reasons. Clients should now use return codes.
         self.LastResponse = response
         self.LastJson = json_dict
-        LOGGER.debug("Successful response: %s", json_dict)
+        LOGGER.debug("Instagram responded successfully: %s", json_dict)
         return response, json_dict
 
     # TODO: Replace with iterator.

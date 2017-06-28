@@ -4,6 +4,7 @@
 # See ReadMe for preparation instructions for credentials.
 
 import unittest
+import requests
 from InstagramAPI import InstagramAPI, credentials
 
 """
@@ -40,14 +41,42 @@ class InstagramAPITests(unittest.TestCase):
         api.getSelfUserFollowers()
         api.logout()
 
+        # Bad name and password will fail
+        api = InstagramAPI(username="NonsenseTest", password="NonsensePassword")
+        with self.assertRaises(requests.HTTPError):
+            api.login()
+
+    def test_direct_share(self):
+        # Direct share plays with headers. Adding a unit-test to ensure it doesn't get broken.
+
+        api = InstagramAPI(username=credentials.USERNAME, password=credentials.PASSWORD)
+        api.login()
+        _, media = api.tagFeed("cat") # get media list by tag #cat
+        for media_item in  media["ranked_items"]:
+            # Skip the videos.
+            if not "video_duration" in media_item:
+                image_key = media_item[u"id"]
+                break
+        else:
+            self.fail("No photos available to share.")
+
+        print("Found media id? ", image_key)
+        api.direct_share(image_key, credentials.FRIENDS_PK, "I like to share pictures of cats with myself.")
+
+
     def test_like_latest_cat(self):
         api = InstagramAPI(username=credentials.USERNAME, password=credentials.PASSWORD)
         api.login()
-        api.tagFeed("cat") # get media list by tag #cat
-        media_id = api.LastJson # last response JSON
+        _, media_id = api.tagFeed("cat") # get a picture/video of a cat.
         api.like(media_id["ranked_items"][0]["pk"]) # like first media
         api.getUserFollowers(media_id["ranked_items"][0]["user"]["pk"]) # get first media owner followers
 
 
 if __name__ == '__main__':
+    import logging
+
+    # Dump everything from InstagramAPI, but suppress detail from Requests
+    logging.basicConfig(level=logging.ERROR)
+    logging.getLogger("InstagramAPI").setLevel(logging.DEBUG)
+
     unittest.main(verbosity=3)

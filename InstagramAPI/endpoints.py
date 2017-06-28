@@ -317,13 +317,13 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'feed/user/' + str(usernameId) + '/?max_id=' + str(maxid) + '&min_timestamp=' + str(minTimestamp) +
             '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
 
-    def getUserFollowers(self, usernameId, maxid=''):
+    def getUserFollowers(self, usernameId, maxid=None):
         if maxid == '':
             return self._sendrequest('friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken)
         else:
             return self._sendrequest(
                 'friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken +
-                '&max_id=' + str(maxid))
+                '&max_id=' + str(maxid or ''))
 
     def getUserFollowings(self, usernameId, maxid=''):
         url = 'friendships/' + str(usernameId) + '/following/?'

@@ -487,74 +487,61 @@ class InstagramAPI:
         return self.getUsernameInfo(self._loggedinuserid)
 
     def getRecentActivity(self):
-        activity = self._sendrequest('news/inbox/?')
-        return activity
+        return self._sendrequest('news/inbox/?')
 
     def getFollowingRecentActivity(self):
-        activity = self._sendrequest('news/?')
-        return activity
+        return self._sendrequest('news/?')
 
     def getv2Inbox(self):
-        inbox = self._sendrequest('direct_v2/inbox/?')
-        return inbox
+        return self._sendrequest('direct_v2/inbox/?')
 
     def getUserTags(self, usernameId):
-        tags = self._sendrequest(
+        return self._sendrequest(
             'usertags/' + str(usernameId) + '/feed/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
-        return tags
 
     def getSelfUserTags(self):
         return self.getUserTags(self._loggedinuserid)
 
     def tagFeed(self, tag):
-        userFeed = self._sendrequest(
+        return self._sendrequest(
             'feed/tag/' + str(tag) + '/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
-        return userFeed
 
     def getMediaLikers(self, mediaId):
-        likers = self._sendrequest('media/' + str(mediaId) + '/likers/?')
-        return likers
+        return self._sendrequest('media/' + str(mediaId) + '/likers/?')
 
     def getGeoMedia(self, usernameId):
-        locations = self._sendrequest('maps/user/' + str(usernameId) + '/')
-        return locations
+        return self._sendrequest('maps/user/' + str(usernameId) + '/')
 
     def getSelfGeoMedia(self):
         return self.getGeoMedia(self._loggedinuserid)
 
     def fbUserSearch(self, query):
-        query = self._sendrequest(
+        return self._sendrequest(
             'fbsearch/topsearch/?context=blended&query=' + str(query) + '&rank_token=' + str(self._ranktoken))
-        return query
 
     def searchUsers(self, query):
-        query = self._sendrequest(
+        return self._sendrequest(
             'users/search/?ig_sig_key_version=' + str(self.SIG_KEY_VERSION) +
             '&is_typeahead=true&query=' + str(query) + '&rank_token=' + str(self._ranktoken))
-        return query
 
     def searchUsername(self, usernameName):
-        query = self._sendrequest('users/' + str(usernameName) + '/usernameinfo/')
-        return query
+        return self._sendrequest('users/' + str(usernameName) + '/usernameinfo/')
 
     def syncFromAdressBook(self, contacts):
         return self._sendrequest(
             'address_book/link/?include=extra_display_name,thumbnails', "contacts=" + json.dumps(contacts))
 
     def searchTags(self, query):
-        query = self._sendrequest(
+        return self._sendrequest(
             'tags/search/?is_typeahead=true&q=' + str(query) + '&rank_token=' + str(self._ranktoken))
-        return query
 
     def getTimeline(self):
-        query = self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
-        return query
+        return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
     def getUserFeed(self, usernameId, maxid='', minTimestamp=None):
-        query = self._sendrequest(
+        return self._sendrequest(
             'feed/user/' + str(usernameId) + '/?max_id=' + str(maxid) + '&min_timestamp=' + str(minTimestamp) +
             '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
-        return query
 
     def getSelfUserFeed(self, maxid='', minTimestamp=None):
         return self.getUserFeed(self._loggedinuserid, maxid, minTimestamp)
@@ -565,8 +552,7 @@ class InstagramAPI:
             '&rank_token=' + self._ranktoken + '&ranked_content=true&')
 
     def searchLocation(self, query):
-        locationFeed = self._sendrequest('fbsearch/places/?rank_token=' + str(self._ranktoken) + '&query=' + str(query))
-        return locationFeed
+        return self._sendrequest('fbsearch/places/?rank_token=' + str(self._ranktoken) + '&query=' + str(query))
 
     def getLocationFeed(self, locationId, maxid=''):
         return self._sendrequest(
@@ -574,9 +560,8 @@ class InstagramAPI:
             self._ranktoken + '&ranked_content=true&')
 
     def getPopularFeed(self):
-        popularFeed = self._sendrequest(
+        return self._sendrequest(
             'feed/popular/?people_teaser_supported=1&rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
-        return popularFeed
 
     def getUserFollowings(self, usernameId, maxid=''):
         url = 'friendships/' + str(usernameId) + '/following/?'
@@ -640,7 +625,7 @@ class InstagramAPI:
 
     def backup(self):
         # TODO Instagram.php 1470-1485
-        return False
+        raise NotImplementedError()
 
     def follow(self, userId):
         data = json.dumps({
@@ -739,7 +724,14 @@ class InstagramAPI:
     
     def _sendrequest(self, endpoint, post=None, login=False):
 
-        # login parameter indicates this is a call to login, so no need to check we are logged in.
+        """
+        :param endpoint: URL to call 
+        :param post: data to HTTP POST. If None, do a GET call.
+        :param login: if True, this is a call to login, so no need to check we are logged in.
+        :return: a tuple (text of response, cookies)
+        """
+
+        # login parameter indicates
         # Otherwise...
 
         if not self._isloggedin and not login:
@@ -771,10 +763,14 @@ class InstagramAPI:
             LOGGER.info("Request returned HTTP Error Code %s: (%s)", response.status_code, response.text)
             raise
 
+        response_text = json.loads(response.text)
+        cookies = response.cookies
+
+        # Here for legacy reasons. Clients should now use return codes.
         self.LastResponse = response
         self.LastJson = json.loads(response.text)
-        LOGGER.debug("Successful response: %s", str(response.text))
-        return True
+        LOGGER.debug("Successful response: %s", response_text)
+        return response_text, cookies
 
     # TODO: Replace with iterator.
     def getTotalFollowers(self, usernameId):

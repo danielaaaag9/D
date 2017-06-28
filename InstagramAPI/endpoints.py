@@ -174,7 +174,6 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         if type(recipients) != type([]):  # TODO: Replace with call to isinstance.
             recipients = [str(recipients)]
         recipient_users = '"",""'.join(str(r) for r in recipients)
-        print("Recipient users", recipient_users)
         endpoint = 'direct_v2/threads/broadcast/media_share/?media_type=photo'
         boundary = self._uuid
         bodies = [

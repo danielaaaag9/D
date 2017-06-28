@@ -8,17 +8,19 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests
+import calendar
+from datetime import datetime
 import json
 import logging
 import hashlib
 import hmac
+import os
 import urllib
 import uuid
 import sys
-from datetime import datetime
-import calendar
-import os
+from time import sleep
+
+import requests
 
 LOGGER = logging.getLogger('InstagramAPI')
 
@@ -44,8 +46,10 @@ try:
 except ImportError:
     pass  # Only here because of the weird __init__.py structure.
 
+
 class AuthenticationError(RuntimeError):
     pass
+
 
 class InstagramAPIBase:
 
@@ -183,3 +187,19 @@ class InstagramAPIBase:
         self.LastJson = json_dict
         LOGGER.debug("Instagram responded successfully: %s", json_dict)
         return response, json_dict
+
+    def _iterator_template(self, function, field, delaybetweencalls=0):
+        """ 
+            Handles pagination and throttling.
+        """
+        maxid = None
+        while True:
+            _, json_dict = function(maxid=maxid)
+            maxid = json_dict.get('next_max_id', None)
+            for item in json_dict.get(field, []):
+                yield item
+            if not maxid:
+                break
+            sleep(delaybetweencalls)  # Avoid overloading Instagram
+            # Consider moving the throttling into a separate function that factors in the time spent
+            # outside of the iterator.

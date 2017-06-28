@@ -104,24 +104,29 @@ class InstagramAPI:
             self._session = requests.Session()
             # if you need proxy make something like this:
             # self.s.proxies = {"https": "http://proxyip:proxyport"}
-            if self._sendrequest('si/fetch_headers/?challenge_type=signup&guid=' + self.generateUUID(False), None, True):
+            full_response, _ = self._sendrequest(
+                'si/fetch_headers/?challenge_type=signup&guid=' + self.generateUUID(False), login=True)
 
-                data = {
-                    'phone_id': self.generateUUID(True),
-                    '_csrftoken': self.LastResponse.cookies['csrftoken'],
-                    'username': self._username,
-                    'guid': self._uuid,
-                    'device_id': self._deviceid,
-                    'password': self._password,
-                    'login_attempt_count': '0'}
+            data = {
+                'phone_id': self.generateUUID(True),
+                '_csrftoken': full_response.cookies['csrftoken'],
+                'username': self._username,
+                'guid': self._uuid,
+                'device_id': self._deviceid,
+                'password': self._password,
+                'login_attempt_count': '0'}
 
-                if self._sendrequest('accounts/login/', self.generateSignature(json.dumps(data)), True):
-                    self._isloggedin = True
-                    self._loggedinuserid = self.LastJson["logged_in_user"]["pk"]
-                    self._ranktoken = "%s_%s" % (self._loggedinuserid, self._uuid)
-                    self._csrftoken = self.LastResponse.cookies["csrftoken"]
+            full_response, json_dict = self._sendrequest(
+                'accounts/login/',
+                post=self.generateSignature(json.dumps(data)),
+                login=True)
 
-                    return True
+            self._isloggedin = True
+            self._loggedinuserid = json_dict["logged_in_user"]["pk"]
+            self._ranktoken = "%s_%s" % (self._loggedinuserid, self._uuid)
+            self._csrftoken = full_response.cookies["csrftoken"]
+
+            return full_response, json_dict
 
     def syncFeatures(self):
         data = json.dumps({
@@ -728,7 +733,10 @@ class InstagramAPI:
         :param endpoint: URL to call 
         :param post: data to HTTP POST. If None, do a GET call.
         :param login: if True, this is a call to login, so no need to check we are logged in.
-        :return: a tuple (text of response, cookies)
+        :return: tuple: (full_response, extracted dictionary of JSON part) of the response from Instagram
+         
+        TODO: most clients will only need one or the other of the responses. Can we simplify?
+        
         """
 
         # login parameter indicates
@@ -763,14 +771,13 @@ class InstagramAPI:
             LOGGER.info("Request returned HTTP Error Code %s: (%s)", response.status_code, response.text)
             raise
 
-        response_text = json.loads(response.text)
-        cookies = response.cookies
+        json_dict = json.loads(response.text)
 
         # Here for legacy reasons. Clients should now use return codes.
         self.LastResponse = response
-        self.LastJson = json.loads(response.text)
-        LOGGER.debug("Successful response: %s", response_text)
-        return response_text, cookies
+        self.LastJson = json_dict
+        LOGGER.debug("Successful response: %s", json_dict)
+        return response, json_dict
 
     # TODO: Replace with iterator.
     def getTotalFollowers(self, usernameId):

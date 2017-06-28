@@ -16,7 +16,6 @@ logging.getLogger("InstagramAPI").setLevel(logging.INFO)
 from InstagramAPI import InstagramAPI, credentials
 
 def listmyfollowers(api):
-
     print("People who follow me:")
     for user in api.followers_iter():
         print("   Name: %s, User Name %s" % (user[u'full_name'], user[u'username']))

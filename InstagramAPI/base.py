@@ -7,6 +7,7 @@
 
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 
 import calendar
 from datetime import datetime
@@ -28,11 +29,7 @@ if sys.version_info.major == 3:
     # The urllib library was split into other modules from Python 2 to Python 3
     import urllib.parse
 
-try:
-    from ImageUtils import getImageSize
-except ImportError:
-    # Issue 159, python3 import fix
-    from .ImageUtils import getImageSize
+from .ImageUtils import getImageSize
 
 from requests_toolbelt import MultipartEncoder
 

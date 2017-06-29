@@ -10,6 +10,7 @@
     Most clients should take advantage of the cleaner subclasses.
     """
 
+from __future__ import absolute_import
 import requests
 import json
 import logging
@@ -18,7 +19,7 @@ import time
 import copy
 import math
 import sys
-from base import InstagramAPIBase, AuthenticationError
+from .base import InstagramAPIBase, AuthenticationError
 
 LOGGER = logging.getLogger('InstagramAPI')
 

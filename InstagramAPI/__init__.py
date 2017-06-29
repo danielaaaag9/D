@@ -1,13 +1,15 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from instagramapi import InstagramAPI
-from endpoints import InstagramAPIEndPoints
+from __future__ import absolute_import
+
+from .instagramapi import InstagramAPI
+from .endpoints import InstagramAPIEndPoints
 try:
     # Developers can add a credentials file to enable the tests and examples to log in.
     # It might not be present.
-    import credentials
+    from . import credentials
 except ImportError:
     credentials = None
 
-__all__ =  InstagramAPI, InstagramAPIEndPoints, credentials
+__all__ = InstagramAPI, InstagramAPIEndPoints, credentials

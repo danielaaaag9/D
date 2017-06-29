@@ -44,7 +44,7 @@ As a result, please be aware that this project will always be behind and incompl
   * Create a file in the
    InstagramAPI directory called `credentials.py`, which contains:
 
-     ````
+   ````
    USERNAME = "your_instagram_user_name"
    PASSWORD = "your_instagram_password"
    ````

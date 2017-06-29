@@ -1,35 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Use text editor to edit the script and type in valid Instagram username/password
+# Instructions:
+#  - Create a directory that only contains photos to upload, and edit it into PHOTO_PATH.
+#  - Edit CAPTION to be your favourite caption.
 
-import os
-import time
+
 from os import listdir
 from os.path import isfile, join
+import time
 from random import randint
-from InstagramAPI import InstagramAPI
+from InstagramAPI import InstagramAPI, credentials
 
-PhotoPath = "~/igphoto/"  # Change Directory to Folder with Pics that you want to upload
-IGUSER = "IGUsername"  # Change to your Instagram USERNAME
-PASSWD = "IGPassword"  # Change to your Instagram Password
-# Change to your Photo Hashtag
-IGCaption = "Your Caption Here #hashtag"
+PHOTO_PATH = "~/igphoto/"  # Change Directory to Folder with pictures that you want to upload
+CAPTION = "Your Caption Here #hashtag"
 
-os.chdir(PhotoPath)
-ListFiles = [f for f in listdir(PhotoPath) if isfile(join(PhotoPath, f))]
-print("Total Photo in this folder:" + str(len(ListFiles)))
+filenamelist = [f for f in listdir(PHOTO_PATH) if isfile(join(PHOTO_PATH, f))]
 
 # Start Login and Uploading Photo
-igapi = InstagramAPI(IGUSER, PASSWD)
+igapi = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)
 igapi.login()
 
-for i in range(len(ListFiles)):
-    photo = ListFiles[i]
-    print("Progress :" + str([i+1]) + " of " + str(len(ListFiles)))
-    print("Now Uploading this photo to instagram: " + photo)
-    igapi.uploadPhoto(photo, caption=IGCaption, upload_id=None)
+for i, photo in enumerate(filenamelist):
+    print("Progress : %s of %s" % (i+1, len(filenamelist)))
+    print("Now uploading this photo to Instagram: %s", photo)
+    igapi.uploadPhoto(photo, caption=CAPTION, upload_id=None)
+
     # sleep for random between 600 - 1200s
-    n = randint(600, 1200)
-    print("Sleep upload for seconds: " + str(n))
-    time.sleep(n)
+    sleep_time = randint(600, 1200)
+    print("Sleep upload for %s seconds.", sleep_time)
+    time.sleep(sleep_time)

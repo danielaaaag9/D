@@ -14,37 +14,34 @@ from __future__ import absolute_import
 import requests
 import json
 import logging
-import urllib
 import time
 import copy
 import math
-import sys
-from .base import InstagramAPIBase, AuthenticationError
-
-LOGGER = logging.getLogger('InstagramAPI')
-
-if sys.version_info.major == 3:
-    # The urllib library was split into other modules from Python 2 to Python 3
-    import urllib.parse
 
 try:
-    from ImageUtils import getImageSize
+    from urllib import urlencode
 except ImportError:
-    # Issue 159, python3 import fix
-    from .ImageUtils import getImageSize
+    from urllib.parse import urlencode
 
 from requests_toolbelt import MultipartEncoder
+from .base import InstagramAPIBase
+from .ImageUtils import getImageSize
+
+
+
+
+
+
+LOGGER = logging.getLogger('InstagramAPI')
 
 try:
     from moviepy.editor import VideoFileClip
 except:  # imageio.core.fetching.NeedDownloadError
-    LOGGER.warning("moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
-
-try:
-    import credentials
-except ImportError:
-    pass  # Only here because of the weird __init__.py structure.
-
+    LOGGER.exception("moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
+    # Try this at the python console to fix it:
+    #     import imageio
+    #     imageio.image.plugins.ffmpeg.download()
+    # It might not help.
 
 class InstagramAPIEndPoints(InstagramAPIBase):
     """
@@ -333,7 +330,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         }
         if maxid:
             query_string['max_id'] = maxid
-        url += urllib.urlencode(query_string)  # TODO: This is urllib.parse.urlencode in Python 3.
+        url += urlencode(query_string)
 
         return self._sendrequest(url)
 
@@ -523,6 +520,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 {'Content-Transfer-Encoding': 'binary'})
         }
 
+        m = MultipartEncoder(data, boundary=self._uuid)
         headers = {
             'X-IG-Capabilities': '3Q4=',
             'X-IG-Connection-Type': 'WIFI',
@@ -532,8 +530,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'Content-type': m.content_type,
             'Connection': 'close',
             'User-Agent': self.USER_AGENT}
-        m = MultipartEncoder(data, boundary=self._uuid)
-        self._session.post("upload/photo/", data=m.to_string(), headers=header)
+        self._session.post("upload/photo/", data=m.to_string(), headers=headers)
         if self.configure(upload_id, photo, caption):
             self.expose()
 

@@ -28,18 +28,30 @@ def listmyfollowings(api):
 def listmyfeed(api):
     print("Sample of items in my feed:")
     for item in itertools.islice(api.userfeed_iter(), 25):
-        print("    % s: User %s posted an item with %s likes, captioned '%s'" % (
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(item[u'device_timestamp']/1000)),
+        print("   %s: User %s posted an item with %s likes, captioned %s" % (
+            time.strftime("%Y-%m-%d %H:%M:%S", timestamp_to_time(item[u'device_timestamp'])),
             item[u'user'][u'username'],
             item[u'like_count'],
-            item[u'caption']['text'],
+            repr(item[u'caption']['text']) if item[u'caption'] else "<No caption>",
             ))
 
 def listlikedmedia(api):
-    # Note: Not seen this output anything yet.
     print("Sample of media liked:")
     for item in itertools.islice(api.likedmedia_iter(), 25):
-        print(item)
+        print("   %s: You liked an item posted by user %s (%s) with the caption %s" % (
+            time.strftime("%Y-%m-%d %H:%M:%S", timestamp_to_time(item[u'device_timestamp'])),
+            item[u'user'][u'username'],
+            item[u'user'][u'full_name'],
+            repr(item[u'caption']['text']) if item[u'caption'] else "<No caption>",
+            ))
+
+
+def timestamp_to_time(timestamp):
+    #  Strangely, sometimes this is milliseconds since epoch, sometimes seconds since epoch.
+    if timestamp > 10000000000:
+        return time.localtime(timestamp / 1000)
+    else:
+        return time.localtime(timestamp)
 
 if __name__ == "__main__":
     api = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)

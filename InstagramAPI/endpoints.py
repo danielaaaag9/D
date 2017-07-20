@@ -145,6 +145,9 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             '_uid': self._loggedinuserid,
             'caption': caption,
         })
+        LOGGER.debug("Deleting clip to release file.")
+        del clip # Release the file.
+        LOGGER.debug("Clip deleted.")
         return self._sendrequest('media/configure/?video=1', self._generatesignature(data))
 
     def deleteComment(self, mediaId, commentId):
@@ -240,6 +243,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest('discover/explore/')
 
     def expose(self):
+        # TODO: This might be deprecated.
+        # http://instagram-private-api.readthedocs.io/en/latest/_modules/instagram_private_api/endpoints/misc.html
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -277,8 +282,9 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'feed/tag/' + hashtagString + '/?max_id=' + str(maxid) +
             '&rank_token=' + self._ranktoken + '&ranked_content=true&')
 
-    def getLikedMedia(self, maxid=''):
-        return self._sendrequest('feed/liked/?max_id=' + str(maxid))
+    def getLikedMedia(self, maxid=None):
+        max_id_param = '?max_id=' + str(maxid) if maxid else ""
+        return self._sendrequest('feed/liked/' + max_id_param)
 
     def getLocationFeed(self, locationId, maxid=''):
         return self._sendrequest(
@@ -508,29 +514,30 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def uploadPhoto(self, photo, caption=None, upload_id=None):
         if upload_id is None:
             upload_id = str(int(time.time() * 1000))
-        data = {
-            'upload_id': upload_id,
-            '_uuid': self._uuid,
-            '_csrftoken': self._csrftoken,
-            'image_compression': '{"lib_name":"jt","lib_version":"1.3.0","quality":"87"}',
-            'photo': (
-                'pending_media_%s.jpg' % upload_id,
-                open(photo, 'rb'),
-                'application/octet-stream',
-                {'Content-Transfer-Encoding': 'binary'})
-        }
+        with open(photo, 'rb') as photo_file:
+            data = {
+                'upload_id': upload_id,
+                '_uuid': self._uuid,
+                '_csrftoken': self._csrftoken,
+                'image_compression': '{"lib_name":"jt","lib_version":"1.3.0","quality":"87"}',
+                'photo': (
+                    'pending_media_%s.jpg' % upload_id,
+                    photo_file,
+                    'application/octet-stream',
+                    {'Content-Transfer-Encoding': 'binary'})
+            }
 
-        m = MultipartEncoder(data, boundary=self._uuid)
-        headers = {
-            'X-IG-Capabilities': '3Q4=',
-            'X-IG-Connection-Type': 'WIFI',
-            'Cookie2': '$Version=1',
-            'Accept-Language': 'en-US',
-            'Accept-Encoding': 'gzip, deflate',
-            'Content-type': m.content_type,
-            'Connection': 'close',
-            'User-Agent': self.USER_AGENT}
-        self._session.post("upload/photo/", data=m.to_string(), headers=headers)
+            m = MultipartEncoder(data, boundary=self._uuid)
+            headers = {
+                'X-IG-Capabilities': '3Q4=',
+                'X-IG-Connection-Type': 'WIFI',
+                'Cookie2': '$Version=1',
+                'Accept-Language': 'en-US',
+                'Accept-Encoding': 'gzip, deflate',
+                'Content-type': m.content_type,
+                'Connection': 'close',
+                'User-Agent': self.USER_AGENT}
+            self._sendrequest("upload/photo/", post=m.to_string(), headers=headers)
         if self.configure(upload_id, photo, caption):
             self.expose()
 
@@ -562,8 +569,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             upload_url = body['video_upload_urls'][3]['url']
             upload_job = body['video_upload_urls'][3]['job']
 
-            videoData = open(video, 'rb').read()
-            # solve issue #85 TypeError: slice indices must be integers or None or have an __index__ method
+            with open(video, 'rb') as videofile:
+                videoData = videofile.read()
             request_size = int(math.floor(len(videoData) / 4))
             lastRequestExtra = (len(videoData) - (request_size * 3))
 
@@ -592,12 +599,17 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                                                                         lenVideo=len(videoData)).encode('utf-8')
 
                 self._session.headers.update({'Content-Length': str(end - start), 'Content-Range': content_range, })
+                LOGGER.info("Starting to upload %d bytes of video data", len(videoData))
                 response = self._session.post(upload_url, data=videoData[start:start + length])
             self._session.headers = headers
 
             if response.status_code == 200:
+                LOGGER.info("Basic upload successful. Configuring video." )
                 if self.configureVideo(upload_id, video, thumbnail, caption):
+                    LOGGER.info("Video configuration complete. Exposing.")
                     self.expose()
+                    LOGGER.info("Video upload complete.")
+
         return False
 
     def userFriendship(self, userId):

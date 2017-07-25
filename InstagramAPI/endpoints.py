@@ -92,14 +92,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         # TODO Instagram.php 705-775
         return False
 
-    def comment(self, mediaId, commentText):
+    def comment(self, media_id, commentText):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
             'comment_text': commentText
         })
-        return self._sendrequest('media/' + str(mediaId) + '/comment/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/comment/', self._generatesignature(data))
 
     def configure(self, upload_id, photo, caption=''):
         (w, h) = get_image_size(photo)
@@ -152,25 +152,25 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('media/configure/?video=1', self._generatesignature(data))
 
-    def delete_comment(self, mediaId, commentId):
+    def delete_comment(self, media_id, commentId):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken
         })
         return self._sendrequest(
-            'media/' + str(mediaId) + '/comment/' +
+            'media/' + str(media_id) + '/comment/' +
             str(commentId) + '/delete/',
             self._generatesignature(data))
 
-    def delete_media(self, mediaId):
+    def delete_media(self, media_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
-            'media_id': mediaId
+            'media_id': media_id
         })
-        return self._sendrequest('media/' + str(mediaId) + '/delete/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/delete/', self._generatesignature(data))
 
     def direct_share(self, media_id, recipients, text=None):
         # TODO: Support video as well as photo. Support threads.
@@ -218,14 +218,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         }
         return self._sendrequest(endpoint, post=data, headers=headers)
 
-    def edit_media(self, mediaId, captionText=''):
+    def edit_media(self, media_id, captionText=''):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
             'caption_text': captionText
         })
-        return self._sendrequest('media/' + str(mediaId) + '/edit_media/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/edit_media/', self._generatesignature(data))
 
     def edit_profile(self, url, phone, first_name, biography, email, gender):
         data = json.dumps({
@@ -297,8 +297,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         max_id_param = '?max_id=' + str(max_id) if max_id else ""
         return self._sendrequest('media/' + media_id + '/comments/' + max_id_param)
 
-    def get_media_likers(self, mediaId):
-        return self._sendrequest('media/' + str(mediaId) + '/likers/?')
+    def get_media_likers(self, media_id):
+        return self._sendrequest('media/' + str(media_id) + '/likers/?')
 
     def get_popular_feed(self):
         return self._sendrequest(
@@ -356,14 +356,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_v2_inbox(self):
         return self._sendrequest('direct_v2/inbox/?')
 
-    def like(self, mediaId):
+    def like(self, media_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
-            'media_id': mediaId
+            'media_id': media_id
         })
-        return self._sendrequest('media/' + str(mediaId) + '/like/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/like/', self._generatesignature(data))
 
     def login(self, force=False):
         if not self._isloggedin or force:
@@ -400,14 +400,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         finally:
             self._isloggedin = False
 
-    def media_info(self, mediaId):
+    def media_info(self, media_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
-            'media_id': mediaId
+            'media_id': media_id
         })
-        return self._sendrequest('media/' + str(mediaId) + '/info/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/info/', self._generatesignature(data))
 
     def megaphone_log(self):
         return self._sendrequest('megaphone/log/')
@@ -420,13 +420,13 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('accounts/remove_profile_picture/', self._generatesignature(data))
 
-    def remove_selftag(self, mediaId):
+    def remove_selftag(self, media_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken
         })
-        return self._sendrequest('media/' + str(mediaId) + '/remove/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/remove/', self._generatesignature(data))
 
     def search_location(self, query):
         return self._sendrequest('fbsearch/places/?rank_token=' + str(self._ranktoken) + '&query=' + str(query))
@@ -508,14 +508,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('friendships/destroy/' + str(userId) + '/', self._generatesignature(data))
 
-    def unlike(self, mediaId):
+    def unlike(self, media_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
-            'media_id': mediaId
+            'media_id': media_id
         })
-        return self._sendrequest('media/' + str(mediaId) + '/unlike/', self._generatesignature(data))
+        return self._sendrequest('media/' + str(media_id) + '/unlike/', self._generatesignature(data))
 
     def upload_photo(self, photo, caption=None, upload_id=None):
         if upload_id is None:

@@ -68,14 +68,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         # TODO Instagram.php 1470-1485
         raise NotImplementedError()
 
-    def block(self, userId):
+    def block(self, user_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self._csrftoken
         })
-        return self._sendrequest('friendships/block/' + str(userId) + '/', self._generatesignature(data))
+        return self._sendrequest('friendships/block/' + str(user_id) + '/', self._generatesignature(data))
 
     def change_password(self, new_password):
         data = json.dumps({
@@ -92,12 +92,12 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         # TODO Instagram.php 705-775
         raise NotImplementedError()
 
-    def comment(self, media_id, commentText):
+    def comment(self, media_id, comment_text):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
-            'comment_text': commentText
+            'comment_text': comment_text
         })
         return self._sendrequest('media/' + str(media_id) + '/comment/', self._generatesignature(data))
 
@@ -152,7 +152,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('media/configure/?video=1', self._generatesignature(data))
 
-    def delete_comment(self, media_id, commentId):
+    def delete_comment(self, media_id, comment_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -160,7 +160,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest(
             'media/' + str(media_id) + '/comment/' +
-            str(commentId) + '/delete/',
+            str(comment_id) + '/delete/',
             self._generatesignature(data))
 
     def delete_media(self, media_id):
@@ -218,12 +218,12 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         }
         return self._sendrequest(endpoint, post=data, headers=headers)
 
-    def edit_media(self, media_id, captionText=''):
+    def edit_media(self, media_id, caption_text=''):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
-            'caption_text': captionText
+            'caption_text': caption_text
         })
         return self._sendrequest('media/' + str(media_id) + '/edit_media/', self._generatesignature(data))
 
@@ -261,14 +261,14 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest(
             'fbsearch/topsearch/?context=blended&query=' + str(query) + '&rank_token=' + str(self._ranktoken))
 
-    def follow(self, userId):
+    def follow(self, user_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self._csrftoken
         })
-        return self._sendrequest('friendships/create/' + str(userId) + '/', self._generatesignature(data))
+        return self._sendrequest('friendships/create/' + str(user_id) + '/', self._generatesignature(data))
 
     def get_direct_share(self):
         return self._sendrequest('direct_share/inbox/?')
@@ -276,21 +276,21 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_following_recent_activity(self):
         return self._sendrequest('news/?')
 
-    def get_geo_media(self, usernameId):
-        return self._sendrequest('maps/user/' + str(usernameId) + '/')
+    def get_geo_media(self, username_id):
+        return self._sendrequest('maps/user/' + str(username_id) + '/')
 
-    def get_hashtag_feed(self, hashtagString, max_id=''):
+    def get_hashtag_feed(self, hashtag_string, max_id=''):
         return self._sendrequest(
-            'feed/tag/' + hashtagString + '/?max_id=' + str(max_id) +
+            'feed/tag/' + hashtag_string + '/?max_id=' + str(max_id) +
             '&rank_token=' + self._ranktoken + '&ranked_content=true&')
 
     def get_liked_media(self, max_id=None):
         max_id_param = '?max_id=' + str(max_id) if max_id else ""
         return self._sendrequest('feed/liked/' + max_id_param)
 
-    def get_location_feed(self, locationId, max_id=''):
+    def get_location_feed(self, location_id, max_id=''):
         return self._sendrequest(
-            'feed/location/' + str(locationId) + '/?max_id=' + max_id + '&rank_token=' +
+            'feed/location/' + str(location_id) + '/?max_id=' + max_id + '&rank_token=' +
             self._ranktoken + '&ranked_content=true&')
 
     def get_media_comments(self, media_id, max_id=None):
@@ -318,21 +318,21 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_timeline(self):
         return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
-    def get_user_feed(self, usernameId, max_id='', minTimestamp=None):
+    def get_user_feed(self, username_id, max_id='', min_timestamp=None):
         return self._sendrequest(
-            'feed/user/' + str(usernameId) + '/?max_id=' + str(max_id) + '&min_timestamp=' + str(minTimestamp) +
+            'feed/user/' + str(username_id) + '/?max_id=' + str(max_id) + '&min_timestamp=' + str(min_timestamp) +
             '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
 
-    def get_user_followers(self, usernameId, max_id=None):
+    def get_user_followers(self, username_id, max_id=None):
         if max_id == '':
-            return self._sendrequest('friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken)
+            return self._sendrequest('friendships/' + str(username_id) + '/followers/?rank_token=' + self._ranktoken)
         else:
             return self._sendrequest(
-                'friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken +
+                'friendships/' + str(username_id) + '/followers/?rank_token=' + self._ranktoken +
                 '&max_id=' + str(max_id or ''))
 
-    def get_user_followings(self, usernameId, max_id=''):
-        url = 'friendships/' + str(usernameId) + '/following/?'
+    def get_user_followings(self, username_id, max_id=''):
+        url = 'friendships/' + str(username_id) + '/following/?'
         query_string = {
             'ig_sig_key_version': self.SIG_KEY_VERSION,
             'rank_token': self._ranktoken,
@@ -346,12 +346,12 @@ class InstagramAPIEndPoints(InstagramAPIBase):
 
         return self._sendrequest(url)
 
-    def get_username_info(self, usernameId):
-        return self._sendrequest('users/' + str(usernameId) + '/info/')
+    def get_username_info(self, username_id):
+        return self._sendrequest('users/' + str(username_id) + '/info/')
 
-    def get_user_tags(self, usernameId):
+    def get_user_tags(self, username_id):
         return self._sendrequest(
-            'usertags/' + str(usernameId) + '/feed/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
+            'usertags/' + str(username_id) + '/feed/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
     def get_v2_inbox(self):
         return self._sendrequest('direct_v2/inbox/?')
@@ -435,8 +435,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest(
             'tags/search/?is_typeahead=true&q=' + str(query) + '&rank_token=' + str(self._ranktoken))
 
-    def search_username(self, usernameName):
-        return self._sendrequest('users/' + str(usernameName) + '/usernameinfo/')
+    def search_username(self, username):
+        return self._sendrequest('users/' + str(username) + '/usernameinfo/')
 
     def search_users(self, query):
         return self._sendrequest(
@@ -490,23 +490,23 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def timeline_feed(self):
         return self._sendrequest('feed/timeline/')
 
-    def unblock(self, userId):
+    def unblock(self, user_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self._csrftoken
         })
-        return self._sendrequest('friendships/unblock/' + str(userId) + '/', self._generatesignature(data))
+        return self._sendrequest('friendships/unblock/' + str(user_id) + '/', self._generatesignature(data))
 
-    def unfollow(self, userId):
+    def unfollow(self, user_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self._csrftoken
         })
-        return self._sendrequest('friendships/destroy/' + str(userId) + '/', self._generatesignature(data))
+        return self._sendrequest('friendships/destroy/' + str(user_id) + '/', self._generatesignature(data))
 
     def unlike(self, media_id):
         data = json.dumps({
@@ -624,11 +624,11 @@ class InstagramAPIEndPoints(InstagramAPIBase):
 
         return False
 
-    def user_friendship(self, userId):
+    def user_friendship(self, user_id):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self._csrftoken
         })
-        return self._sendrequest('friendships/show/' + str(userId) + '/', self._generatesignature(data))
+        return self._sendrequest('friendships/show/' + str(user_id) + '/', self._generatesignature(data))

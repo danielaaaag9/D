@@ -14,7 +14,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         Clients should use this class.
         """
 
-    # Make visible to clients for easy of reference.
+    # Make visible to clients for ease of reference.
     AuthenticationError = AuthenticationError
 
     def __init__(self, username, password):

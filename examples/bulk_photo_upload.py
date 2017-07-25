@@ -4,6 +4,8 @@
 # Instructions:
 #  - Create a directory that only contains photos to upload, and edit it into PHOTO_PATH.
 #  - Edit CAPTION to be your favourite caption.
+#
+# Warning makes change to test account.
 
 
 from os import listdir
@@ -15,17 +17,18 @@ from InstagramAPI import InstagramAPI, credentials
 # Change Directory to Folder with pictures that you want to upload
 PHOTO_PATH = "~/igphoto/"
 CAPTION = "Your Caption Here #hashtag"
-API = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)
+
 
 
 def main():
     file_list = [f for f in listdir(PHOTO_PATH) if isfile(join(PHOTO_PATH, f))]
     # Start Login and Uploading Photo
-    API.login()
+    api = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)
+    api.login()
     for i, photo in enumerate(file_list):
         print("Progress : %s of %s" % (i + 1, len(file_list)))
         print("Now uploading this photo to Instagram: %s" % photo)
-        API.upload_photo(photo, caption=CAPTION, upload_id=None)
+        api.upload_photo(photo, caption=CAPTION, upload_id=None)
 
         # sleep for random between 600 - 1200s
         sleep_time = randint(600, 1200)

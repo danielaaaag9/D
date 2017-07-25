@@ -14,34 +14,38 @@ from __future__ import absolute_import
 import requests
 import json
 import logging
+import urllib
 import time
 import copy
 import math
-
-try:
-    from urllib import urlencode
-except ImportError:
-    from urllib.parse import urlencode
-
-from requests_toolbelt import MultipartEncoder
-from .base import InstagramAPIBase
-from .ImageUtils import getImageSize
-
-
-
-
-
+import sys
+from .base import InstagramAPIBase, AuthenticationError
 
 LOGGER = logging.getLogger('InstagramAPI')
+
+if sys.version_info.major == 3:
+    # The urllib library was split into other modules from Python 2 to Python 3
+    import urllib.parse
+
+try:
+    from image_utils import get_image_size
+except ImportError:
+    # Issue 159, python3 import fix
+    from .image_utils import get_image_size
+
+from requests_toolbelt import MultipartEncoder
 
 try:
     from moviepy.editor import VideoFileClip
 except:  # imageio.core.fetching.NeedDownloadError
-    LOGGER.exception("moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
-    # Try this at the python console to fix it:
-    #     import imageio
-    #     imageio.image.plugins.ffmpeg.download()
-    # It might not help.
+    LOGGER.warning(
+        "moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
+
+try:
+    import credentials
+except ImportError:
+    pass  # Only here because of the weird __init__.py structure.
+
 
 class InstagramAPIEndPoints(InstagramAPIBase):
     """
@@ -57,7 +61,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def __init__(self, username, password):
         InstagramAPIBase.__init__(self, username, password)
 
-    def autoCompleteUserList(self):
+    def auto_complete_user_list(self):
         return self._sendrequest('friendships/autocomplete_user_list/')
 
     def backup(self):
@@ -73,18 +77,18 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('friendships/block/' + str(userId) + '/', self._generatesignature(data))
 
-    def changePassword(self, newPassword):
+    def change_password(self, new_password):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken,
             'old_password': self._password,
-            'new_password1': newPassword,
-            'new_password2': newPassword
+            'new_password1': new_password,
+            'new_password2': new_password
         })
         return self._sendrequest('accounts/change_password/', self._generatesignature(data))
 
-    def changeProfilePicture(self, photo):
+    def change_profile_picture(self, photo):
         # TODO Instagram.php 705-775
         return False
 
@@ -98,7 +102,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest('media/' + str(mediaId) + '/comment/', self._generatesignature(data))
 
     def configure(self, upload_id, photo, caption=''):
-        (w, h) = getImageSize(photo)
+        (w, h) = get_image_size(photo)
         data = json.dumps({
             '_csrftoken': self._csrftoken,
             'media_folder': 'Instagram',
@@ -119,9 +123,10 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             }})
         return self._sendrequest('media/configure/?', self._generatesignature(data))
 
-    def configureVideo(self, upload_id, video, thumbnail, caption=''):
+    def configure_video(self, upload_id, video, thumbnail, caption=''):
         clip = VideoFileClip(video)
-        self.uploadPhoto(photo=thumbnail, caption=caption, upload_id=upload_id)
+        self.upload_photo(photo=thumbnail, caption=caption,
+                          upload_id=upload_id)
         data = json.dumps({
             'upload_id': upload_id,
             'source_type': 3,
@@ -145,22 +150,20 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             '_uid': self._loggedinuserid,
             'caption': caption,
         })
-        LOGGER.debug("Deleting clip to release file.")
-        del clip # Release the file.
-        LOGGER.debug("Clip deleted.")
         return self._sendrequest('media/configure/?video=1', self._generatesignature(data))
 
-    def deleteComment(self, mediaId, commentId):
+    def delete_comment(self, mediaId, commentId):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
             '_csrftoken': self._csrftoken
         })
         return self._sendrequest(
-            'media/' + str(mediaId) + '/comment/' + str(commentId) + '/delete/',
+            'media/' + str(mediaId) + '/comment/' +
+            str(commentId) + '/delete/',
             self._generatesignature(data))
 
-    def deleteMedia(self, mediaId):
+    def delete_media(self, mediaId):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -172,7 +175,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def direct_share(self, media_id, recipients, text=None):
         # TODO: Support video as well as photo. Support threads.
         # TODO: Indicate recipients must be pks, not user names.
-        if type(recipients) != type([]):  # TODO: Replace with call to isinstance.
+        if not isinstance(recipients, list):
             recipients = [str(recipients)]
         recipient_users = '"",""'.join(str(r) for r in recipients)
         endpoint = 'direct_v2/threads/broadcast/media_share/?media_type=photo'
@@ -204,7 +207,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 'data': text or '',
             },
         ]
-        data = InstagramAPIBase.buildBody(bodies, boundary)
+        data = InstagramAPIBase.build_body(bodies, boundary)
         headers = {
             'User-Agent': self.USER_AGENT,
             'Proxy-Connection': 'keep-alive',
@@ -213,9 +216,9 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'Content-Type': 'multipart/form-data; boundary={}'.format(boundary),
             'Accept-Language': 'en-en',
         }
-        self._sendrequest(endpoint, post=data, headers=headers)
+        return self._sendrequest(endpoint, post=data, headers=headers)
 
-    def editMedia(self, mediaId, captionText=''):
+    def edit_media(self, mediaId, captionText=''):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -224,7 +227,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('media/' + str(mediaId) + '/edit_media/', self._generatesignature(data))
 
-    def editProfile(self, url, phone, first_name, biography, email, gender):
+    def edit_profile(self, url, phone, first_name, biography, email, gender):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -243,8 +246,6 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest('discover/explore/')
 
     def expose(self):
-        # TODO: This might be deprecated.
-        # http://instagram-private-api.readthedocs.io/en/latest/_modules/instagram_private_api/endpoints/misc.html
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -254,7 +255,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('qe/expose/', self._generatesignature(data))
 
-    def fbUserSearch(self, query):
+    def fb_user_search(self, query):
         return self._sendrequest(
             'fbsearch/topsearch/?context=blended&query=' + str(query) + '&rank_token=' + str(self._ranktoken))
 
@@ -267,41 +268,39 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('friendships/create/' + str(userId) + '/', self._generatesignature(data))
 
-
-    def getDirectShare(self):
+    def get_direct_share(self):
         return self._sendrequest('direct_share/inbox/?')
 
-    def getFollowingRecentActivity(self):
+    def get_following_recent_activity(self):
         return self._sendrequest('news/?')
 
-    def getGeoMedia(self, usernameId):
+    def get_geo_media(self, usernameId):
         return self._sendrequest('maps/user/' + str(usernameId) + '/')
 
-    def getHashtagFeed(self, hashtagString, maxid=''):
+    def get_hashtag_feed(self, hashtagString, maxid=''):
         return self._sendrequest(
             'feed/tag/' + hashtagString + '/?max_id=' + str(maxid) +
             '&rank_token=' + self._ranktoken + '&ranked_content=true&')
 
-    def getLikedMedia(self, maxid=None):
-        max_id_param = '?max_id=' + str(maxid) if maxid else ""
-        return self._sendrequest('feed/liked/' + max_id_param)
+    def get_liked_media(self, maxid=''):
+        return self._sendrequest('feed/liked/?max_id=' + str(maxid))
 
-    def getLocationFeed(self, locationId, maxid=''):
+    def get_location_feed(self, locationId, maxid=''):
         return self._sendrequest(
             'feed/location/' + str(locationId) + '/?max_id=' + maxid + '&rank_token=' +
             self._ranktoken + '&ranked_content=true&')
 
-    def getMediaComments(self, mediaId, max_id=''):
+    def get_media_comments(self, mediaId, max_id=''):
         return self._sendrequest('media/' + mediaId + '/comments/?max_id=' + max_id)
 
-    def getMediaLikers(self, mediaId):
+    def get_media_likers(self, mediaId):
         return self._sendrequest('media/' + str(mediaId) + '/likers/?')
 
-    def getPopularFeed(self):
+    def get_popular_feed(self):
         return self._sendrequest(
             'feed/popular/?people_teaser_supported=1&rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
-    def getProfileData(self):
+    def get_profile_data(self):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -309,18 +308,18 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('accounts/current_user/?edit=true', self._generatesignature(data))
 
-    def getRecentActivity(self):
+    def get_recent_activity(self):
         return self._sendrequest('news/inbox/?')
 
-    def getTimeline(self):
+    def get_timeline(self):
         return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
-    def getUserFeed(self, usernameId, maxid='', minTimestamp=None):
+    def get_user_feed(self, usernameId, maxid='', minTimestamp=None):
         return self._sendrequest(
             'feed/user/' + str(usernameId) + '/?max_id=' + str(maxid) + '&min_timestamp=' + str(minTimestamp) +
             '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
 
-    def getUserFollowers(self, usernameId, maxid=None):
+    def get_user_followers(self, usernameId, maxid=None):
         if maxid == '':
             return self._sendrequest('friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken)
         else:
@@ -328,7 +327,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 'friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken +
                 '&max_id=' + str(maxid or ''))
 
-    def getUserFollowings(self, usernameId, maxid=''):
+    def get_user_followings(self, usernameId, maxid=''):
         url = 'friendships/' + str(usernameId) + '/following/?'
         query_string = {
             'ig_sig_key_version': self.SIG_KEY_VERSION,
@@ -336,18 +335,21 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         }
         if maxid:
             query_string['max_id'] = maxid
-        url += urlencode(query_string)
+        if sys.version_info.major == 3:
+            url += urllib.parse.urlencode(query_string)
+        else:
+            url += urllib.urlencode(query_string)
 
         return self._sendrequest(url)
 
-    def getUsernameInfo(self, usernameId):
+    def get_username_info(self, usernameId):
         return self._sendrequest('users/' + str(usernameId) + '/info/')
 
-    def getUserTags(self, usernameId):
+    def get_user_tags(self, usernameId):
         return self._sendrequest(
             'usertags/' + str(usernameId) + '/feed/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
-    def getv2Inbox(self):
+    def get_v2_inbox(self):
         return self._sendrequest('direct_v2/inbox/?')
 
     def like(self, mediaId):
@@ -365,10 +367,10 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             # if you need proxy make something like this:
             # self.s.proxies = {"https": "http://proxyip:proxyport"}
             full_response, _ = self._sendrequest(
-                'si/fetch_headers/?challenge_type=signup&guid=' + self.generateUUID(False), login=True)
+                'si/fetch_headers/?challenge_type=signup&guid=' + self.generate_uuid(False), login=True)
 
             data = {
-                'phone_id': self.generateUUID(True),
+                'phone_id': self.generate_uuid(True),
                 '_csrftoken': full_response.cookies['csrftoken'],
                 'username': self._username,
                 'guid': self._uuid,
@@ -394,7 +396,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         finally:
             self._isloggedin = False
 
-    def mediaInfo(self, mediaId):
+    def media_info(self, mediaId):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -403,10 +405,10 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('media/' + str(mediaId) + '/info/', self._generatesignature(data))
 
-    def megaphoneLog(self):
+    def megaphone_log(self):
         return self._sendrequest('megaphone/log/')
 
-    def removeProfilePicture(self):
+    def remove_profile_picture(self):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -414,7 +416,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('accounts/remove_profile_picture/', self._generatesignature(data))
 
-    def removeSelftag(self, mediaId):
+    def remove_selftag(self, mediaId):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -422,22 +424,22 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('media/' + str(mediaId) + '/remove/', self._generatesignature(data))
 
-    def searchLocation(self, query):
+    def search_location(self, query):
         return self._sendrequest('fbsearch/places/?rank_token=' + str(self._ranktoken) + '&query=' + str(query))
 
-    def searchTags(self, query):
+    def search_tags(self, query):
         return self._sendrequest(
             'tags/search/?is_typeahead=true&q=' + str(query) + '&rank_token=' + str(self._ranktoken))
 
-    def searchUsername(self, usernameName):
+    def search_username(self, usernameName):
         return self._sendrequest('users/' + str(usernameName) + '/usernameinfo/')
 
-    def searchUsers(self, query):
+    def search_users(self, query):
         return self._sendrequest(
             'users/search/?ig_sig_key_version=' + str(self.SIG_KEY_VERSION) +
             '&is_typeahead=true&query=' + str(query) + '&rank_token=' + str(self._ranktoken))
 
-    def setNameAndPhone(self, name='', phone=''):
+    def set_name_phone(self, name='', phone=''):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -447,7 +449,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('accounts/set_phone_and_name/', self._generatesignature(data))
 
-    def setPrivateAccount(self):
+    def set_private_account(self):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -455,7 +457,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('accounts/set_private/', self._generatesignature(data))
 
-    def setPublicAccount(self):
+    def set_public_account(self):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -463,11 +465,11 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('accounts/set_public/', self._generatesignature(data))
 
-    def syncFromAdressBook(self, contacts):
+    def sync_from_adress_book(self, contacts):
         return self._sendrequest(
             'address_book/link/?include=extra_display_name,thumbnails', "contacts=" + json.dumps(contacts))
 
-    def syncFeatures(self):
+    def sync_features(self):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -477,11 +479,11 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('qe/sync/', self._generatesignature(data))
 
-    def tagFeed(self, tag):
+    def tag_feed(self, tag):
         return self._sendrequest(
             'feed/tag/' + str(tag) + '/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
-    def timelineFeed(self):
+    def timeline_feed(self):
         return self._sendrequest('feed/timeline/')
 
     def unblock(self, userId):
@@ -511,37 +513,36 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         })
         return self._sendrequest('media/' + str(mediaId) + '/unlike/', self._generatesignature(data))
 
-    def uploadPhoto(self, photo, caption=None, upload_id=None):
+    def upload_photo(self, photo, caption=None, upload_id=None):
         if upload_id is None:
             upload_id = str(int(time.time() * 1000))
-        with open(photo, 'rb') as photo_file:
-            data = {
-                'upload_id': upload_id,
-                '_uuid': self._uuid,
-                '_csrftoken': self._csrftoken,
-                'image_compression': '{"lib_name":"jt","lib_version":"1.3.0","quality":"87"}',
-                'photo': (
-                    'pending_media_%s.jpg' % upload_id,
-                    photo_file,
-                    'application/octet-stream',
-                    {'Content-Transfer-Encoding': 'binary'})
-            }
-
-            m = MultipartEncoder(data, boundary=self._uuid)
-            headers = {
-                'X-IG-Capabilities': '3Q4=',
-                'X-IG-Connection-Type': 'WIFI',
-                'Cookie2': '$Version=1',
-                'Accept-Language': 'en-US',
-                'Accept-Encoding': 'gzip, deflate',
-                'Content-type': m.content_type,
-                'Connection': 'close',
-                'User-Agent': self.USER_AGENT}
-            self._sendrequest("upload/photo/", post=m.to_string(), headers=headers)
+        data = {
+            'upload_id': upload_id,
+            '_uuid': self._uuid,
+            '_csrftoken': self._csrftoken,
+            'image_compression': '{"lib_name":"jt","lib_version":"1.3.0","quality":"87"}',
+            'photo': (
+                'pending_media_%s.jpg' % upload_id,
+                open(photo, 'rb'),
+                'application/octet-stream',
+                {'Content-Transfer-Encoding': 'binary'})
+        }
+        m = MultipartEncoder(data, boundary=self._uuid)
+        headers = {
+            'X-IG-Capabilities': '3Q4=',
+            'X-IG-Connection-Type': 'WIFI',
+            'Cookie2': '$Version=1',
+            'Accept-Language': 'en-US',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-type': m.content_type,
+            'Connection': 'close',
+            'User-Agent': self.USER_AGENT}
+        self._session.post(self.API_URL + "upload/photo/",
+                           data=m.to_string(), headers=headers)
         if self.configure(upload_id, photo, caption):
             self.expose()
 
-    def uploadVideo(self, video, thumbnail, caption=None, upload_id=None):
+    def upload_video(self, video, thumbnail, caption=None, upload_id=None):
 
         # TODO: Migrate to use _sendrequest.
         if upload_id is None:
@@ -563,16 +564,17 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'Content-type': m.content_type,
             'Connection': 'keep-alive',
             'User-Agent': self.USER_AGENT})
-        response = self._session.post(self.API_URL + "upload/video/", data=m.to_string())
+        response = self._session.post(
+            self.API_URL + "upload/video/", data=m.to_string())
         if response.status_code == 200:
             body = json.loads(response.text)
             upload_url = body['video_upload_urls'][3]['url']
             upload_job = body['video_upload_urls'][3]['job']
 
-            with open(video, 'rb') as videofile:
-                videoData = videofile.read()
-            request_size = int(math.floor(len(videoData) / 4))
-            lastRequestExtra = (len(videoData) - (request_size * 3))
+            video_data = open(video, 'rb').read()
+            # solve issue #85 TypeError: slice indices must be integers or None or have an __index__ method
+            request_size = int(math.floor(len(video_data) / 4))
+            last_request_extra = (len(video_data) - (request_size * 3))
 
             headers = copy.deepcopy(self._session.headers)
             self._session.headers.update({
@@ -591,28 +593,25 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             for i in range(0, 4):
                 start = i * request_size
                 if i == 3:
-                    end = i * request_size + lastRequestExtra
+                    end = i * request_size + last_request_extra
                 else:
                     end = (i + 1) * request_size
-                length = lastRequestExtra if i == 3 else request_size
+                length = last_request_extra if i == 3 else request_size
                 content_range = "bytes {start}-{end}/{lenVideo}".format(start=start, end=(end - 1),
-                                                                        lenVideo=len(videoData)).encode('utf-8')
+                                                                        lenVideo=len(video_data)).encode('utf-8')
 
-                self._session.headers.update({'Content-Length': str(end - start), 'Content-Range': content_range, })
-                LOGGER.info("Starting to upload %d bytes of video data", len(videoData))
-                response = self._session.post(upload_url, data=videoData[start:start + length])
+                self._session.headers.update(
+                    {'Content-Length': str(end - start), 'Content-Range': content_range, })
+                response = self._session.post(
+                    upload_url, data=video_data[start:start + length])
             self._session.headers = headers
 
             if response.status_code == 200:
-                LOGGER.info("Basic upload successful. Configuring video." )
-                if self.configureVideo(upload_id, video, thumbnail, caption):
-                    LOGGER.info("Video configuration complete. Exposing.")
+                if self.configure_video(upload_id, video, thumbnail, caption):
                     self.expose()
-                    LOGGER.info("Video upload complete.")
-
         return False
 
-    def userFriendship(self, userId):
+    def user_friendship(self, userId):
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -620,4 +619,3 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             '_csrftoken': self._csrftoken
         })
         return self._sendrequest('friendships/show/' + str(userId) + '/', self._generatesignature(data))
-

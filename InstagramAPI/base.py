@@ -29,14 +29,13 @@ if sys.version_info.major == 3:
     # The urllib library was split into other modules from Python 2 to Python 3
     import urllib.parse
 
-from .ImageUtils import getImageSize
-
 from requests_toolbelt import MultipartEncoder
 
 try:
     from moviepy.editor import VideoFileClip
 except:  # imageio.core.fetching.NeedDownloadError
-    LOGGER.warning("moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
+    LOGGER.warning(
+        "moviepy is not correctly installed (e.g. ffmpeg not installed). VideoConfig not supported.")
 
 try:
     import credentials
@@ -74,25 +73,25 @@ class InstagramAPIBase:
         self._deviceid = self._generatedeviceid(md5hash.hexdigest())
         self._setuser(username, password)
         self._isloggedin = False
-        self.LastResponse = None
+        self.last_response = None
 
     def _setuser(self, username, password):
         self._username = username
         self._password = password
-        self._uuid = self.generateUUID(True)
+        self._uuid = self.generate_uuid(True)
 
     @classmethod
     def _generatesignature(cls, data):
-        try:
-            parsedData = urllib.parse.quote(data)
-        except AttributeError:
-            parsedData = urllib.quote(data)  # TODO: This is urllib.parse.quote in Python 3.
+        if sys.version_info.major == 3:
+            parsed_data = urllib.parse.quote(data)
+        else:
+            parsed_data = urllib.quote(data)
 
         return (
             'ig_sig_key_version=' + cls.SIG_KEY_VERSION +
             '&signed_body=' + hmac.new(
                 cls.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest() +
-            '.' + parsedData)
+            '.' + parsed_data)
 
     @staticmethod
     def _generatedeviceid(seed):
@@ -102,7 +101,7 @@ class InstagramAPIBase:
         return 'android-' + m.hexdigest()[:16]
 
     @staticmethod
-    def generateUUID(type_):
+    def generate_uuid(type_):
         generated_uuid = str(uuid.uuid4())
         if type_:
             return generated_uuid
@@ -110,23 +109,24 @@ class InstagramAPIBase:
             return generated_uuid.replace('-', '')
 
     @staticmethod
-    def generateUploadId():
+    def generate_upload_id():
         return str(calendar.timegm(datetime.utcnow().utctimetuple()))
 
     @staticmethod
-    def buildBody(bodies, boundary):
+    def build_body(bodies, boundary):
         body = u''
         for b in bodies:
             body += u'--{boundary}\r\n'.format(boundary=boundary)
-            body += u'Content-Disposition: {b_type}; name="{b_name}"'.format(b_type=b['type'], b_name=b['name'])
+            body += u'Content-Disposition: {b_type}; name="{b_name}"'.format(
+                b_type=b['type'], b_name=b['name'])
             _filename = b.get('filename', None)
             _headers = b.get('headers', None)
             if _filename:
                 _filename, ext = os.path.splitext(_filename)
                 # TODO: Investigate why there is an _body here.
                 _body += u'; filename="pending_media_{uid}.{ext}"'.format(
-                    uid=InstagramAPIBase.generateUploadId(), ext=ext)
-            if _headers and type(_headers) == type([]):  # TODO: Use isinstance
+                    uid=InstagramAPIBase.generate_upload_id(), ext=ext)
+            if _headers and isinstance(_headers, list):
                 for h in _headers:
                     _body += u'\r\n{header}'.format(header=h)
             body += u'\r\n\r\n{data}\r\n'.format(data=b['data'])
@@ -134,7 +134,6 @@ class InstagramAPIBase:
         return body
 
     def _sendrequest(self, endpoint, post=None, login=False, headers=None):
-
         """
         :param endpoint: URL to call 
         :param post: data to HTTP POST. If None, do a GET call.
@@ -161,12 +160,15 @@ class InstagramAPIBase:
             'User-Agent': self.USER_AGENT}
         self._session.headers.update(headers)
 
-        LOGGER.debug("%s call to %s %s", "POST" if post else "GET", endpoint, post)
+        LOGGER.debug("%s call to %s %s",
+                     "POST" if post else "GET", endpoint, post)
         try:
             if post is not None:  # POST
-                response = self._session.post(self.API_URL + endpoint, data=post)  # , verify=False
+                response = self._session.post(
+                    self.API_URL + endpoint, data=post)  # , verify=False
             else:  # GET
-                response = self._session.get(self.API_URL + endpoint)  # , verify=False
+                response = self._session.get(
+                    self.API_URL + endpoint)  # , verify=False
         except requests.RequestException as re:
             LOGGER.info("Call to Instagram failed: %s", re)
             raise
@@ -174,14 +176,15 @@ class InstagramAPIBase:
         try:
             response.raise_for_status()
         except requests.RequestException as re:
-            LOGGER.info("Instagram returned HTTP Error Code %s: (%s)", response.status_code, response.text)
+            LOGGER.info("Instagram returned HTTP Error Code %s: (%s)",
+                        response.status_code, response.text)
             raise
 
         json_dict = json.loads(response.text)
 
         # Here for legacy reasons. Clients should now use return codes.
-        self.LastResponse = response
-        self.LastJson = json_dict
+        self.last_response = response
+        self.last_json = json_dict
         LOGGER.debug("Instagram responded successfully: %s", json_dict)
         return response, json_dict
 

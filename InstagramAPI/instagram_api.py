@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import time
 
 from .base import AuthenticationError
 from .endpoints import InstagramAPIEndPoints
+
 
 class InstagramAPI(InstagramAPIEndPoints):
     """ Most of the available calls are defined in the InstagramAPIEndPoints.
@@ -14,7 +14,8 @@ class InstagramAPI(InstagramAPIEndPoints):
         Clients should use this class.
         """
 
-    AuthenticationError = AuthenticationError  # Make visible to clients for easy of reference.
+    # Make visible to clients for ease of reference.
+    AuthenticationError = AuthenticationError
 
     def __init__(self, username, password):
         InstagramAPIEndPoints.__init__(self, username, password)
@@ -28,7 +29,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.getUserFollowers(username, maxid),
+                lambda maxid: self.get_user_followers(username, maxid),
                 field="users",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -42,7 +43,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.getUserFollowings(username, maxid),
+                lambda maxid: self.get_user_followings(username, maxid),
                 field="users",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -56,7 +57,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.getUserFeed(username, maxid, mintimestamp),
+                lambda maxid: self.get_user_feed(username, maxid, mintimestamp),
                 field="items",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -64,11 +65,11 @@ class InstagramAPI(InstagramAPIEndPoints):
     def likedmedia_iter(self, delaybetweencalls=0):
         """ 
             Yields a series of dictionaries describing liked media.
-            
+
             Note: Never ends.
         """
         for item in self._iterator_template(
-                self.getLikedMedia,
+                self.get_liked_media,
                 field="items",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -77,21 +78,20 @@ class InstagramAPI(InstagramAPIEndPoints):
     #
     # Consider replacing these with None defaults for userid.
 
-    def getSelfGeoMedia(self):
-        return self.getGeoMedia(self._loggedinuserid)
+    def self_geo_media(self):
+        return self.get_geo_media(self._loggedinuserid)
 
-    def getSelfUserFeed(self, maxid='', minTimestamp=None):
-        return self.getUserFeed(self._loggedinuserid, maxid, minTimestamp)
+    def self_user_feed(self, maxid='', minTimestamp=None):
+        return self.get_user_feed(self._loggedinuserid, maxid, minTimestamp)
 
-    def getSelfUsersFollowing(self):
-        return self.getUserFollowings(self._loggedinuserid)
+    def self_user_followings(self):
+        return self.get_user_followings(self._loggedinuserid)
 
-    def getSelfUserFollowers(self, maxid=''):
-        return self.getUserFollowers(self._loggedinuserid, maxid=maxid)
+    def self_user_followers(self, maxid=''):
+        return self.get_user_followers(self._loggedinuserid, maxid=maxid)
 
-    def getSelfUsernameInfo(self):
-        return self.getUsernameInfo(self._loggedinuserid)
+    def self_user_info(self):
+        return self.get_username_info(self._loggedinuserid)
 
-    def getSelfUserTags(self):
-        return self.getUserTags(self._loggedinuserid)
-
+    def self_user_tag(self):
+        return self.get_user_tags(self._loggedinuserid)

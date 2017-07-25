@@ -1,2 +1,3 @@
 *.pyc
 InstagramAPI/credentials.py
+.vscode

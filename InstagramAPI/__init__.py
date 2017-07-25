@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import
 
-from .instagramapi import InstagramAPI
+from .instagram_api import InstagramAPI
 from .endpoints import InstagramAPIEndPoints
 try:
     # Developers can add a credentials file to enable the tests and examples to log in.

@@ -14,6 +14,13 @@ thumbnail_local_path = thumbnail_url.split("/")[-1]
 urllib.urlretrieve(video_url, video_local_path)
 urllib.urlretrieve(thumbnail_url, thumbnail_local_path)
 
-InstagramAPI = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)
-InstagramAPI.login()
-InstagramAPI.uploadVideo(video_local_path, thumbnail_local_path, caption="This is the caption")
+API = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)
+
+
+def main():
+    API.login()
+    API.upload_video(video_local_path, thumbnail_local_path, caption="This is the caption")
+
+
+if __name__ == '__main__':
+    main()

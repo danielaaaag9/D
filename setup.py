@@ -3,7 +3,8 @@ from setuptools import setup
 setup(
     name='instagram-api',
     version='0.1',
-    description='Unofficial Instagram API. Provides access to all Instagram features (like, follow, upload photos, upload videos, etc.)',
+    description='Unofficial Instagram API. ' +
+                'Provides access to all Instagram features (like, follow, upload photos, upload videos, etc.)',
     url='https://github.com/LevPasha/Instagram-API-python/',
     author='Pasha Lev',
     author_email='levpasha@gmail.com',

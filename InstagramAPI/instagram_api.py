@@ -84,7 +84,6 @@ class InstagramAPI(InstagramAPIEndPoints):
                 delaybetweencalls=delaybetweencalls):
             yield item
 
-
     # Helper functions to find out information about the logged in user.
     #
     # Consider replacing these with None defaults for userid.

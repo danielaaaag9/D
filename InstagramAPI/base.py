@@ -29,8 +29,6 @@ if sys.version_info.major == 3:
     # The urllib library was split into other modules from Python 2 to Python 3
     import urllib.parse
 
-from requests_toolbelt import MultipartEncoder
-
 try:
     from moviepy.editor import VideoFileClip
 except:  # imageio.core.fetching.NeedDownloadError
@@ -175,7 +173,7 @@ class InstagramAPIBase:
 
         try:
             response.raise_for_status()
-        except requests.RequestException as re:
+        except requests.RequestException:
             LOGGER.info("Instagram returned HTTP Error Code %s: (%s)",
                         response.status_code, response.text)
             raise
@@ -185,13 +183,14 @@ class InstagramAPIBase:
         LOGGER.debug("Instagram responded successfully: %s", json_dict)
         return response, json_dict
 
-    def _iterator_template(self, function, field, delaybetweencalls=0):
+    @staticmethod
+    def _iterator_template(func, field, delaybetweencalls=0):
         """ 
             Handles pagination and throttling.
         """
         max_id = None
         while True:
-            _, json_dict = function(max_id=max_id)
+            _, json_dict = func(max_id=max_id)
             max_id = json_dict.get('next_max_id', None)
             for item in json_dict.get(field, []):
                 yield item

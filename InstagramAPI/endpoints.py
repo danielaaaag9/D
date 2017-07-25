@@ -19,7 +19,7 @@ import time
 import copy
 import math
 import sys
-from .base import InstagramAPIBase, AuthenticationError
+from .base import InstagramAPIBase
 
 LOGGER = logging.getLogger('InstagramAPI')
 
@@ -90,7 +90,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
 
     def change_profile_picture(self, photo):
         # TODO Instagram.php 705-775
-        return False
+        raise NotImplementedError()
 
     def comment(self, media_id, commentText):
         data = json.dumps({
@@ -581,7 +581,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             upload_job = body['video_upload_urls'][3]['job']
 
             with open(video, 'rb') as videofile:
-                videoData = videofile.read()
+                video_data = videofile.read()
             request_size = int(math.floor(len(video_data) / 4))
             last_request_extra = (len(video_data) - (request_size * 3))
 

@@ -49,9 +49,10 @@ def list_liked_media(api):
             repr(item[u'caption']['text']) if item[u'caption'] else "<No caption>",
             ))
 
+
 def list_comments_on_media(api):
     print("Sample of comments on specific media item:")
-    media_id='1477006830906870775_19343908'
+    media_id = '1477006830906870775_19343908'
 
     for comment in itertools.islice(api.media_comments_iter(media_id), 25):
         print(
@@ -67,8 +68,7 @@ def timestamp_to_time(timestamp):
     else:
         return time.localtime(timestamp)
 
-
-if __name__ == "__main__":
+def main():
     api = InstagramAPI(credentials.USERNAME, credentials.PASSWORD)
     api.login()
 
@@ -77,3 +77,7 @@ if __name__ == "__main__":
     list_feed(api)
     list_liked_media(api)
     list_comments_on_media(api)
+
+
+if __name__ == "__main__":
+    main()

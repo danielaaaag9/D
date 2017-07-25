@@ -24,12 +24,12 @@ def main():
     API.login()
     for i, photo in enumerate(file_list):
         print("Progress : %s of %s" % (i + 1, len(file_list)))
-        print("Now uploading this photo to Instagram: %s" % (photo))
+        print("Now uploading this photo to Instagram: %s" % photo)
         API.upload_photo(photo, caption=CAPTION, upload_id=None)
 
         # sleep for random between 600 - 1200s
         sleep_time = randint(600, 1200)
-        print("Sleep upload for %s seconds." % (sleep_time))
+        print("Sleep upload for %s seconds." % sleep_time)
         time.sleep(sleep_time)
 
 

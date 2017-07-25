@@ -4,7 +4,6 @@
 # See ReadMe for preparation instructions for credentials.
 
 import unittest
-import requests
 from InstagramAPI import InstagramAPI, credentials
 
 """

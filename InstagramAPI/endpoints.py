@@ -388,11 +388,12 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 login=True)
 
             self._isloggedin = True
-            self._loggedinuserid = json.loads(full_response.text)["logged_in_user"]["pk"]
+            decoded_text = json.loads(full_response.text)
+            self._loggedinuserid = decoded_text["logged_in_user"]["pk"]
             self._ranktoken = "%s_%s" % (self._loggedinuserid, self._uuid)
             self._csrftoken = full_response.cookies["csrftoken"]
 
-            return full_response
+            return decoded_text
 
     def logout(self):
         try:

@@ -522,7 +522,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 'application/octet-stream',
                 {'Content-Transfer-Encoding': 'binary'})
         }
-
+        m = MultipartEncoder(data, boundary=self._uuid)
         headers = {
             'X-IG-Capabilities': '3Q4=',
             'X-IG-Connection-Type': 'WIFI',
@@ -532,8 +532,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'Content-type': m.content_type,
             'Connection': 'close',
             'User-Agent': self.USER_AGENT}
-        m = MultipartEncoder(data, boundary=self._uuid)
-        self._session.post("upload/photo/", data=m.to_string(), headers=header)
+        self._session.post(self.API_URL + "upload/photo/", data=m.to_string(), headers=headers)
         if self.configure(upload_id, photo, caption):
             self.expose()
 

@@ -336,7 +336,10 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         if maxid:
             query_string['max_id'] = maxid
         # TODO: This is urllib.parse.urlencode in Python 3.
-        url += urllib.urlencode(query_string)
+        if sys.version_info.major == 3:
+            url += urllib.parse.urlencode(query_string)
+        else:
+            url += urllib.urlencode(query_string)
 
         return self._sendrequest(url)
 

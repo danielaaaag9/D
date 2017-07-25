@@ -29,7 +29,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.getUserFollowers(username, maxid),
+                lambda maxid: self.get_user_followers(username, maxid),
                 field="users",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -43,7 +43,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.getUserFollowings(username, maxid),
+                lambda maxid: self.get_user_followings(username, maxid),
                 field="users",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -57,7 +57,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.getUserFeed(username, maxid, mintimestamp),
+                lambda maxid: self.get_user_feed(username, maxid, mintimestamp),
                 field="items",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -69,7 +69,7 @@ class InstagramAPI(InstagramAPIEndPoints):
             Note: Never ends.
         """
         for item in self._iterator_template(
-                self.getLikedMedia,
+                self.get_liked_media,
                 field="items",
                 delaybetweencalls=delaybetweencalls):
             yield item

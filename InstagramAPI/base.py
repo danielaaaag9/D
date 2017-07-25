@@ -82,17 +82,16 @@ class InstagramAPIBase:
 
     @classmethod
     def _generatesignature(cls, data):
-        try:
-            parsedData = urllib.parse.quote(data)
-        except AttributeError:
-            # TODO: This is urllib.parse.quote in Python 3.
-            parsedData = urllib.quote(data)
+        if sys.version_info.major == 3:
+            parsed_data = urllib.parse.quote(data)
+        else:
+            parsed_data = urllib.quote(data)
 
         return (
             'ig_sig_key_version=' + cls.SIG_KEY_VERSION +
             '&signed_body=' + hmac.new(
                 cls.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest() +
-            '.' + parsedData)
+            '.' + parsed_data)
 
     @staticmethod
     def _generatedeviceid(seed):
@@ -127,7 +126,7 @@ class InstagramAPIBase:
                 # TODO: Investigate why there is an _body here.
                 _body += u'; filename="pending_media_{uid}.{ext}"'.format(
                     uid=InstagramAPIBase.generate_upload_id(), ext=ext)
-            if _headers and type(_headers) == type([]):  # TODO: Use isinstance
+            if _headers and isinstance(_headers, list):
                 for h in _headers:
                     _body += u'\r\n{header}'.format(header=h)
             body += u'\r\n\r\n{data}\r\n'.format(data=b['data'])

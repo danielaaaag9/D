@@ -246,6 +246,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest('discover/explore/')
 
     def expose(self):
+        # TODO: This might be deprecated.
+        # http://instagram-private-api.readthedocs.io/en/latest/_modules/instagram_private_api/endpoints/misc.html
         data = json.dumps({
             '_uuid': self._uuid,
             '_uid': self._loggedinuserid,
@@ -282,8 +284,9 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'feed/tag/' + hashtagString + '/?max_id=' + str(maxid) +
             '&rank_token=' + self._ranktoken + '&ranked_content=true&')
 
-    def get_liked_media(self, maxid=''):
-        return self._sendrequest('feed/liked/?max_id=' + str(maxid))
+    def get_liked_media(self, maxid=None):
+        max_id_param = '?max_id=' + str(maxid) if maxid else ""
+        return self._sendrequest('feed/liked/' + max_id_param)
 
     def get_location_feed(self, locationId, maxid=''):
         return self._sendrequest(
@@ -516,17 +519,20 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def upload_photo(self, photo, caption=None, upload_id=None):
         if upload_id is None:
             upload_id = str(int(time.time() * 1000))
-        data = {
-            'upload_id': upload_id,
-            '_uuid': self._uuid,
-            '_csrftoken': self._csrftoken,
-            'image_compression': '{"lib_name":"jt","lib_version":"1.3.0","quality":"87"}',
-            'photo': (
-                'pending_media_%s.jpg' % upload_id,
-                open(photo, 'rb'),
-                'application/octet-stream',
-                {'Content-Transfer-Encoding': 'binary'})
-        }
+
+        with open(photo, 'rb') as photo_file:
+            data = {
+                'upload_id': upload_id,
+                '_uuid': self._uuid,
+                '_csrftoken': self._csrftoken,
+                'image_compression': '{"lib_name":"jt","lib_version":"1.3.0","quality":"87"}',
+                'photo': (
+                    'pending_media_%s.jpg' % upload_id,
+                    photo_file.read(),
+                    'application/octet-stream',
+                    {'Content-Transfer-Encoding': 'binary'})
+            }
+
         m = MultipartEncoder(data, boundary=self._uuid)
         headers = {
             'X-IG-Capabilities': '3Q4=',
@@ -537,6 +543,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             'Content-type': m.content_type,
             'Connection': 'close',
             'User-Agent': self.USER_AGENT}
+        self._sendrequest("upload/photo/", post=m.to_string(), headers=headers)
+
         self._session.post(self.API_URL + "upload/photo/",
                            data=m.to_string(), headers=headers)
         if self.configure(upload_id, photo, caption):
@@ -571,8 +579,8 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             upload_url = body['video_upload_urls'][3]['url']
             upload_job = body['video_upload_urls'][3]['job']
 
-            video_data = open(video, 'rb').read()
-            # solve issue #85 TypeError: slice indices must be integers or None or have an __index__ method
+            with open(video, 'rb') as videofile:
+                videoData = videofile.read()
             request_size = int(math.floor(len(video_data) / 4))
             last_request_extra = (len(video_data) - (request_size * 3))
 
@@ -602,13 +610,17 @@ class InstagramAPIEndPoints(InstagramAPIBase):
 
                 self._session.headers.update(
                     {'Content-Length': str(end - start), 'Content-Range': content_range, })
+                LOGGER.info("Starting to upload %d bytes of video data", len(video_data))
                 response = self._session.post(
                     upload_url, data=video_data[start:start + length])
             self._session.headers = headers
 
             if response.status_code == 200:
                 if self.configure_video(upload_id, video, thumbnail, caption):
+                    LOGGER.info("Video configuration complete. Exposing.")
                     self.expose()
+                    LOGGER.info("Video upload complete.")
+
         return False
 
     def user_friendship(self, userId):

@@ -370,7 +370,7 @@ class InstagramAPIEndPoints(InstagramAPIBase):
             self._session = requests.Session()
             # if you need proxy make something like this:
             # self.s.proxies = {"https": "http://proxyip:proxyport"}
-            full_response, _ = self._sendrequest(
+            full_response = self._sendrequest(
                 'si/fetch_headers/?challenge_type=signup&guid=' + self.generate_uuid(False), login=True)
 
             data = {
@@ -382,17 +382,17 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 'password': self._password,
                 'login_attempt_count': '0'}
 
-            full_response, json_dict = self._sendrequest(
+            full_response = self._sendrequest(
                 'accounts/login/',
                 post=self._generatesignature(json.dumps(data)),
                 login=True)
 
             self._isloggedin = True
-            self._loggedinuserid = json_dict["logged_in_user"]["pk"]
+            self._loggedinuserid = json.loads(full_response.text)["logged_in_user"]["pk"]
             self._ranktoken = "%s_%s" % (self._loggedinuserid, self._uuid)
             self._csrftoken = full_response.cookies["csrftoken"]
 
-            return full_response, json_dict
+            return full_response
 
     def logout(self):
         try:

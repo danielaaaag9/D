@@ -135,9 +135,9 @@ class InstagramAPIBase:
         """
         :param endpoint: URL to call 
         :param post: data to HTTP POST. If None, do a GET call.
-        :param login: if True, this is a call to login, so no need to check we are logged in.
+        :param login: if True, this is a call to login, so no need to check we are logged in. Also changes return type.
         :param headers: if not None, override default headers
-        :return: tuple: (full_response, extracted dictionary of JSON part) of the response from Instagram
+        :return: tuple: full response from Instagram if login else just extracted dictionary of JSON part
 
         TODO: most clients will only need one or the other of the responses. Can we simplify?
 
@@ -178,10 +178,17 @@ class InstagramAPIBase:
                         response.status_code, response.text)
             raise
 
+        if login:
+            # Need full reponse, containing cookies
+            LOGGER.debug("Instagram responded successfully to special login operation.")
+            return response
+
+        # Otherwise, unpack just the JSON part
+
         json_dict = json.loads(response.text)
 
         LOGGER.debug("Instagram responded successfully: %s", json_dict)
-        return response, json_dict
+        return json_dict
 
     @staticmethod
     def _iterator_template(func, field, delaybetweencalls=0):
@@ -190,7 +197,7 @@ class InstagramAPIBase:
         """
         max_id = None
         while True:
-            _, json_dict = func(max_id=max_id)
+            json_dict = func(max_id=max_id)
             max_id = json_dict.get('next_max_id', None)
             for item in json_dict.get(field, []):
                 yield item

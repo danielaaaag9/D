@@ -182,9 +182,6 @@ class InstagramAPIBase:
 
         json_dict = json.loads(response.text)
 
-        # Here for legacy reasons. Clients should now use return codes.
-        self.last_response = response
-        self.last_json = json_dict
         LOGGER.debug("Instagram responded successfully: %s", json_dict)
         return response, json_dict
 

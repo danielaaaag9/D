@@ -189,13 +189,13 @@ class InstagramAPIBase:
         """ 
             Handles pagination and throttling.
         """
-        maxid = None
+        max_id = None
         while True:
-            _, json_dict = function(maxid=maxid)
-            maxid = json_dict.get('next_max_id', None)
+            _, json_dict = function(max_id=max_id)
+            max_id = json_dict.get('next_max_id', None)
             for item in json_dict.get(field, []):
                 yield item
-            if not maxid:
+            if not max_id:
                 break
             sleep(delaybetweencalls)  # Avoid overloading Instagram
             # Consider moving the throttling into a separate function that factors in the time spent

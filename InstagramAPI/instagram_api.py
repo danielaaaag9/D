@@ -29,7 +29,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.get_user_followers(username, maxid),
+                lambda max_id: self.get_user_followers(username, max_id),
                 field="users",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -43,7 +43,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.get_user_followings(username, maxid),
+                lambda max_id: self.get_user_followings(username, max_id),
                 field="users",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -57,7 +57,7 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda maxid: self.get_user_feed(username, maxid, mintimestamp),
+                lambda max_id: self.get_user_feed(username, max_id, mintimestamp),
                 field="items",
                 delaybetweencalls=delaybetweencalls):
             yield item
@@ -74,6 +74,17 @@ class InstagramAPI(InstagramAPIEndPoints):
                 delaybetweencalls=delaybetweencalls):
             yield item
 
+    def media_comments_iter(self, media_id, delaybetweencalls=0):
+        """
+            Yields a series of dictionaries describing media comments.
+        """
+        for item in self._iterator_template(
+                lambda max_id: self.get_media_comments(media_id, max_id),
+                field="comments",
+                delaybetweencalls=delaybetweencalls):
+            yield item
+
+
     # Helper functions to find out information about the logged in user.
     #
     # Consider replacing these with None defaults for userid.
@@ -81,14 +92,14 @@ class InstagramAPI(InstagramAPIEndPoints):
     def self_geo_media(self):
         return self.get_geo_media(self._loggedinuserid)
 
-    def self_user_feed(self, maxid='', minTimestamp=None):
-        return self.get_user_feed(self._loggedinuserid, maxid, minTimestamp)
+    def self_user_feed(self, max_id='', minTimestamp=None):
+        return self.get_user_feed(self._loggedinuserid, max_id, minTimestamp)
 
     def self_user_followings(self):
         return self.get_user_followings(self._loggedinuserid)
 
-    def self_user_followers(self, maxid=''):
-        return self.get_user_followers(self._loggedinuserid, maxid=maxid)
+    def self_user_followers(self, max_id=''):
+        return self.get_user_followers(self._loggedinuserid, max_id=max_id)
 
     def self_user_info(self):
         return self.get_username_info(self._loggedinuserid)

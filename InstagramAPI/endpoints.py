@@ -279,22 +279,23 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_geo_media(self, usernameId):
         return self._sendrequest('maps/user/' + str(usernameId) + '/')
 
-    def get_hashtag_feed(self, hashtagString, maxid=''):
+    def get_hashtag_feed(self, hashtagString, max_id=''):
         return self._sendrequest(
-            'feed/tag/' + hashtagString + '/?max_id=' + str(maxid) +
+            'feed/tag/' + hashtagString + '/?max_id=' + str(max_id) +
             '&rank_token=' + self._ranktoken + '&ranked_content=true&')
 
-    def get_liked_media(self, maxid=None):
-        max_id_param = '?max_id=' + str(maxid) if maxid else ""
+    def get_liked_media(self, max_id=None):
+        max_id_param = '?max_id=' + str(max_id) if max_id else ""
         return self._sendrequest('feed/liked/' + max_id_param)
 
-    def get_location_feed(self, locationId, maxid=''):
+    def get_location_feed(self, locationId, max_id=''):
         return self._sendrequest(
-            'feed/location/' + str(locationId) + '/?max_id=' + maxid + '&rank_token=' +
+            'feed/location/' + str(locationId) + '/?max_id=' + max_id + '&rank_token=' +
             self._ranktoken + '&ranked_content=true&')
 
-    def get_media_comments(self, mediaId, max_id=''):
-        return self._sendrequest('media/' + mediaId + '/comments/?max_id=' + max_id)
+    def get_media_comments(self, media_id, max_id=None):
+        max_id_param = '?max_id=' + str(max_id) if max_id else ""
+        return self._sendrequest('media/' + media_id + '/comments/' + max_id_param)
 
     def get_media_likers(self, mediaId):
         return self._sendrequest('media/' + str(mediaId) + '/likers/?')
@@ -317,27 +318,27 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_timeline(self):
         return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
 
-    def get_user_feed(self, usernameId, maxid='', minTimestamp=None):
+    def get_user_feed(self, usernameId, max_id='', minTimestamp=None):
         return self._sendrequest(
-            'feed/user/' + str(usernameId) + '/?max_id=' + str(maxid) + '&min_timestamp=' + str(minTimestamp) +
+            'feed/user/' + str(usernameId) + '/?max_id=' + str(max_id) + '&min_timestamp=' + str(minTimestamp) +
             '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
 
-    def get_user_followers(self, usernameId, maxid=None):
-        if maxid == '':
+    def get_user_followers(self, usernameId, max_id=None):
+        if max_id == '':
             return self._sendrequest('friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken)
         else:
             return self._sendrequest(
                 'friendships/' + str(usernameId) + '/followers/?rank_token=' + self._ranktoken +
-                '&max_id=' + str(maxid or ''))
+                '&max_id=' + str(max_id or ''))
 
-    def get_user_followings(self, usernameId, maxid=''):
+    def get_user_followings(self, usernameId, max_id=''):
         url = 'friendships/' + str(usernameId) + '/following/?'
         query_string = {
             'ig_sig_key_version': self.SIG_KEY_VERSION,
             'rank_token': self._ranktoken,
         }
-        if maxid:
-            query_string['max_id'] = maxid
+        if max_id:
+            query_string['max_id'] = max_id
         if sys.version_info.major == 3:
             url += urllib.parse.urlencode(query_string)
         else:

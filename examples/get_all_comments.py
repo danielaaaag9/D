@@ -18,11 +18,11 @@ comments = []
 
 # TODO: Add support for iterators, and then watch this code shrink.
 while has_more_comments:
-    _ = API.getMediaComments(media_id, max_id=max_id)
+    _ = API.get_media_comments(media_id, max_id=max_id)
     # comments' page come from older to newer, lets preserve desc order in full list
-    for c in reversed(API.LastJson['comments']):
+    for c in reversed(API.last_json['comments']):
         comments.append(c)
-    has_more_comments = API.LastJson.get('has_more_comments', False)
+    has_more_comments = API.last_json.get('has_more_comments', False)
     # evaluate stop conditions
     if count and len(comments) >= count:
         comments = comments[:count]
@@ -45,7 +45,7 @@ while has_more_comments:
             print("stopped by until_date")
     # next page
     if has_more_comments:
-        max_id = API.LastJson.get('next_max_id', '')
+        max_id = API.last_json.get('next_max_id', '')
         time.sleep(2)
 
 for c in comments:

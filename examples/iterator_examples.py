@@ -49,6 +49,16 @@ def list_liked_media(api):
             repr(item[u'caption']['text']) if item[u'caption'] else "<No caption>",
             ))
 
+def list_comments_on_media(api):
+    print("Sample of comments on specific media item:")
+    media_id='1477006830906870775_19343908'
+
+    for comment in itertools.islice(api.media_comments_iter(media_id), 25):
+        print(
+            "    User %s posted comment '%r'" % (
+                comment[u'user'][u'username'],
+                comment[u'text']))
+
 
 def timestamp_to_time(timestamp):
     #  Strangely, sometimes this is milliseconds since epoch, sometimes seconds since epoch.
@@ -66,3 +76,4 @@ if __name__ == "__main__":
     list_followings(api)
     list_feed(api)
     list_liked_media(api)
+    list_comments_on_media(api)

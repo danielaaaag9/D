@@ -52,3 +52,31 @@ As a result, please be aware that this project will always be behind and incompl
   * Run the test script.
 
     `python test.py`
+    
+### Usage Instructions
+
+1. Import the `InstagramAPI` package.
+
+2. Optionally, if you want to see information about the requests sent to Instagram, configure the logging module.
+
+2. Create an instance of the `InstagramAPI` class. The constructor takes your Instagram username and password as parameters.
+
+3. Call the `login()` method. Your InstagramAPI instance is ready to go.
+
+#### "Endpoints"
+
+You now have a large list of methods you can call on the InstagramAPI instance, that are directly derived from the commands Instagram accepts. (Check out `endpoints.py` for a list of the methods available.) For example, `get_profile_data` will return a dictionary of information about the currently logged in user - including their full name and email address. (See `examples/display_my_user_details.py` to see this in action.)
+
+#### Iterators
+
+Some methods allow you to get a "page" worth of a longer list. Each time you call the method, you provide the starting point from the previous call. To make navigating these easier, the more common methods have be wrapped up in an iterator. (See `instagram_api.py` for a list.) 
+
+For example, `followers_iter()` is an iterator over dictionaries describing each use who follows the logged in user.  See `examples/iterator_examples.py` to see this in action.
+
+To avoid heavily loading the Instagram server (which in turn can lead to your account being throttled or suspended), there is an option with each iterator to slow it down: `delay_between_calls` is the number of seconds to sleep between each call to Instagram.
+
+#### Helper Methods
+
+A few methods can act on any Instagram user, but are typically applied to the current logged in user. Some helper methods in `instagram_api.py` automatically apply to the logged in user, to simplify this common case
+
+For example `get_user_feed()` returns a page of information about itemsabout a specified user's feed, while `self_user_feed()` returns the same information about the *current logged in* user's feed.

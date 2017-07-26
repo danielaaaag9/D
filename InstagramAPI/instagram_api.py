@@ -22,7 +22,7 @@ class InstagramAPI(InstagramAPIEndPoints):
 
     # Helper functions to gather complete lists/deal with pagination.
 
-    def followers_iter(self, username=None, delaybetweencalls=0):
+    def followers_iter(self, username=None, delay_between_calls=0):
         """ 
             Yields a series of dictionaries describing each user that follows this user.
         """
@@ -31,10 +31,10 @@ class InstagramAPI(InstagramAPIEndPoints):
         for item in self._iterator_template(
                 lambda max_id: self.get_user_followers(username, max_id),
                 field="users",
-                delaybetweencalls=delaybetweencalls):
+                delay_between_calls=delay_between_calls):
             yield item
 
-    def followings_iter(self, username=None, delaybetweencalls=0):
+    def followings_iter(self, username=None, delay_between_calls=0):
         """ 
             Yields a series of dictionaries describing each user that this user follows
             If username is None, use logged in user.
@@ -45,10 +45,10 @@ class InstagramAPI(InstagramAPIEndPoints):
         for item in self._iterator_template(
                 lambda max_id: self.get_user_followings(username, max_id),
                 field="users",
-                delaybetweencalls=delaybetweencalls):
+                delay_between_calls=delay_between_calls):
             yield item
 
-    def userfeed_iter(self, username=None, mintimestamp=None, delaybetweencalls=0):
+    def userfeed_iter(self, username=None, min_timestamp=None, delay_between_calls=0):
         """ 
             Yields a series of dictionaries describing this user's feed.
             If username is None, use logged in user.
@@ -57,12 +57,12 @@ class InstagramAPI(InstagramAPIEndPoints):
         username = username or self._loggedinuserid
 
         for item in self._iterator_template(
-                lambda max_id: self.get_user_feed(username, max_id, mintimestamp),
+                lambda max_id: self.get_user_feed(username, max_id, min_timestamp),
                 field="items",
-                delaybetweencalls=delaybetweencalls):
+                delay_between_calls=delay_between_calls):
             yield item
 
-    def likedmedia_iter(self, delaybetweencalls=0):
+    def likedmedia_iter(self, delay_between_calls=0):
         """ 
             Yields a series of dictionaries describing liked media.
 
@@ -71,17 +71,17 @@ class InstagramAPI(InstagramAPIEndPoints):
         for item in self._iterator_template(
                 self.get_liked_media,
                 field="items",
-                delaybetweencalls=delaybetweencalls):
+                delay_between_calls=delay_between_calls):
             yield item
 
-    def media_comments_iter(self, media_id, delaybetweencalls=0):
+    def media_comments_iter(self, media_id, delay_between_calls=0):
         """
             Yields a series of dictionaries describing media comments.
         """
         for item in self._iterator_template(
                 lambda max_id: self.get_media_comments(media_id, max_id),
                 field="comments",
-                delaybetweencalls=delaybetweencalls):
+                delay_between_calls=delay_between_calls):
             yield item
 
     # Helper functions to find out information about the logged in user.
@@ -91,8 +91,8 @@ class InstagramAPI(InstagramAPIEndPoints):
     def self_geo_media(self):
         return self.get_geo_media(self._loggedinuserid)
 
-    def self_user_feed(self, max_id='', minTimestamp=None):
-        return self.get_user_feed(self._loggedinuserid, max_id, minTimestamp)
+    def self_user_feed(self, max_id='', min_timestamp=None):
+        return self.get_user_feed(self._loggedinuserid, max_id, min_timestamp)
 
     def self_user_followings(self):
         return self.get_user_followings(self._loggedinuserid)

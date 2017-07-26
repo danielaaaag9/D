@@ -191,7 +191,7 @@ class InstagramAPIBase:
         return json_dict
 
     @staticmethod
-    def _iterator_template(func, field, delaybetweencalls=0):
+    def _iterator_template(func, field, delay_between_calls=0):
         """ 
             Handles pagination and throttling.
         """
@@ -203,6 +203,6 @@ class InstagramAPIBase:
                 yield item
             if not max_id:
                 break
-            sleep(delaybetweencalls)  # Avoid overloading Instagram
+            sleep(delay_between_calls)  # Avoid overloading Instagram
             # Consider moving the throttling into a separate function that factors in the time spent
             # outside of the iterator.

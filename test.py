@@ -52,7 +52,7 @@ class InstagramAPITests(unittest.TestCase):
         api = InstagramAPI(username=credentials.USERNAME,
                            password=credentials.PASSWORD)
         api.login()
-        _, media = api.tag_feed("cat")  # get media list by tag #cat
+        media = api.tag_feed("cat")  # get media list by tag #cat
         for media_item in media["ranked_items"]:
             # Skip the videos.
             if "video_duration" not in media_item:

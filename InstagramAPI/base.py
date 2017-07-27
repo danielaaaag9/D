@@ -137,10 +137,7 @@ class InstagramAPIBase:
         :param post: data to HTTP POST. If None, do a GET call.
         :param login: if True, this is a call to login, so no need to check we are logged in. Also changes return type.
         :param headers: if not None, override default headers
-        :return: tuple: full response from Instagram if login else just extracted dictionary of JSON part
-
-        TODO: most clients will only need one or the other of the responses. Can we simplify?
-
+        :return: full response from Instagram if login, else just extracted dictionary of JSON part
         """
 
         # login parameter indicates

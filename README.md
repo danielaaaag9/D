@@ -49,6 +49,8 @@ As a result, please be aware that this project will always be behind and incompl
    PASSWORD = "your_instagram_password"
    ````
 
+    The test account should **not** have two-factor authentication turned on.
+
   * Run the test script.
 
     `python test.py`
@@ -59,7 +61,7 @@ As a result, please be aware that this project will always be behind and incompl
 
 2. Optionally, if you want to see information about the requests sent to Instagram, configure the logging module.
 
-2. Create an instance of the `InstagramAPI` class. The constructor takes your Instagram username and password as parameters.
+2. Create an instance of the `InstagramAPI` class. The constructor takes your Instagram username and password as parameters. (See below if you need Two-Factor authentication.)
 
 3. Call the `login()` method. Your InstagramAPI instance is ready to go.
 
@@ -80,3 +82,14 @@ To avoid heavily loading the Instagram server (which in turn can lead to your ac
 A few methods can act on any Instagram user, but are typically applied to the current logged in user. Some helper methods in `instagram_api.py` automatically apply to the logged in user, to simplify this common case
 
 For example `get_user_feed()` returns a page of information about itemsabout a specified user's feed, while `self_user_feed()` returns the same information about the *current logged in* user's feed.
+
+#### Two-Factor Authentication
+
+Some Instagram accounts have Two-Factor Authentication (2FA) turned on. For these accounts, a code is sent to the associated phone during the login process, and this is required to complete the login. (Alternatively, preallocated "backup codes" can be used if SMS is not available.)
+
+In order to use 2FA with this API, you will need some mechanism to get the code from the phone. A simple way is to simply ask the user to type it in at the console - but you might need have a GUI, web-server or SMS gateway solution, depending on your application.
+
+If you wish to support 2FA, you need to provide a callback function (`two_factor_callback()`) to the constructor. If the username is associate with an account with 2FA turned on, the provided function will be called with some details about the account name and phone number being called. The function should return the verification string, which will then automatically be used to complete the login call.
+
+For simplicity, most of the example and test code assumes your account does not have 2FA. However, `examples/login.py` contains example code of how to login with 2FA.
+

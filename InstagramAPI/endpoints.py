@@ -19,7 +19,7 @@ import time
 import copy
 import math
 import sys
-from .base import InstagramAPIBase
+from .base import InstagramAPIBase, AuthenticationError
 
 LOGGER = logging.getLogger('InstagramAPI')
 
@@ -58,8 +58,17 @@ class InstagramAPIEndPoints(InstagramAPIBase):
 
     """
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, two_factor_callback=None):
+        """
+        :param two_factor_callback: a function that takes a dictionary of "two_factor_info", and returns an
+               verification string for logging in. Typically, this function would be prompt the user to enter the text
+               sent via SMS.
+               two_factor_info parameter typically contains the user name, parts of the phone number, a unique
+               identifier, and details about how frequently the requests may be attempted without triggering robocalls
+               or other consequences.
+               """
         InstagramAPIBase.__init__(self, username, password)
+        self._two_factor_callback = two_factor_callback
 
     def auto_complete_user_list(self):
         return self._sendrequest('friendships/autocomplete_user_list/')
@@ -366,6 +375,13 @@ class InstagramAPIEndPoints(InstagramAPIBase):
         return self._sendrequest('media/' + str(media_id) + '/like/', self._generatesignature(data))
 
     def login(self, force=False):
+        """
+            Authenticate this API instance.
+
+            If already logged in (and not later logged out) does nothing (unless forced).
+        :param force: if true, will attempt to log in even if already logged in.
+        :return: dictionary of responses.
+        """
         if not self._isloggedin or force:
             self._session = requests.Session()
             # if you need proxy make something like this:
@@ -382,10 +398,31 @@ class InstagramAPIEndPoints(InstagramAPIBase):
                 'password': self._password,
                 'login_attempt_count': '0'}
 
-            full_response = self._sendrequest(
-                'accounts/login/',
-                post=self._generatesignature(json.dumps(data)),
-                login=True)
+            try:
+                full_response = self._sendrequest(
+                    'accounts/login/',
+                    post=self._generatesignature(json.dumps(data)),
+                    login=True)
+            except InstagramAPIBase._2FA_Required as exception:
+                # In order to login, need to provide the second factor (i.e. SMS code or backup code).
+                # Use call-back to get this string.
+                if not self._two_factor_callback:
+                    raise AuthenticationError("This account requires support for Two-Factor Authentication")
+                two_factor_info = exception.two_factor_info = exception.two_factor_info
+                verification_string = self._two_factor_callback(two_factor_info)
+                data = {
+                    'verification_code': verification_string,
+                    'two_factor_identifier': two_factor_info['two_factor_identifier'],
+                    '_csrftoken': full_response.cookies['csrftoken'],
+                    'username': self._username,
+                    'device_id': self._deviceid,
+                    'password': self._password,
+                }
+
+                full_response = self._sendrequest(
+                    'accounts/two_factor_login/',
+                    post=self._generatesignature(json.dumps(data)),
+                    login=True)
 
             self._isloggedin = True
             decoded_text = json.loads(full_response.text)

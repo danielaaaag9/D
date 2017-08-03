@@ -17,8 +17,8 @@ class InstagramAPI(InstagramAPIEndPoints):
     # Make visible to clients for ease of reference.
     AuthenticationError = AuthenticationError
 
-    def __init__(self, username, password):
-        InstagramAPIEndPoints.__init__(self, username, password)
+    def __init__(self, username, password, two_factor_callback=None):
+        InstagramAPIEndPoints.__init__(self, username, password, two_factor_callback)
 
     # Helper functions to gather complete lists/deal with pagination.
 

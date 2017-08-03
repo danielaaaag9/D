@@ -15,12 +15,26 @@ interface used by the Instagram App on your phone. It is a useful resource, and 
 
 * There's an initial Python port of that project, [LevPasha/Instagram-API-python](https://github.com/LevPasha/Instagram-API-python). It doesn't have a complete set of end-points, and changes to the PHP version may take time to be reflected here.
 
-* This is a fork of that project, in an attempt to make it more robust (exceptions, logging), cleaner (iterators, simplifying interfaces), and compliant with coding standards. Changes to the other port version may take time to be reflected here.
+* This is a fork of that project. This is an attempt to improve it in
+  several areas including:
 
-   * There are already some breaking changes, and are likely to be more, but clients of Lev Pasha's project will find the changes required to use this library are minor.
+    * Robustness
+      * Errors are handled with exceptions, not return codes.
+      * Runtime issues are reported with logging, rather than print statements.
+    * Cleanliness
+      * Interfaces are simplified.
+      * Introduction of iterators to make accessing lists more pythonic.
+      * More compliant with coding standards.
+      * Examples have been fleshed out, and are eaier to run.
+    * Some limited extensions to functionality.
+      * Support for Two Factor Authentication has been added.
 
-As a result, please be aware that this project will always be behind and incomplete when it comes to Instagram's new features.
+  To achieve these improvements, sacrifices have been made in backwards compatibility. There have been
+  several breaking changes to the API. There may be more. However, clients of Lev Pasha's project will find the changes required to use this library are minor.
 
+  It is acknowledged that unit-testing remains deficient.
+
+  Note: Changes to the other port version may take time to be reflected here. As a result, please be aware that this project will always be behind and incomplete when it comes to Instagram's new features.
 
 ### Installation Instructions
 

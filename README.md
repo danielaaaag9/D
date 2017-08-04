@@ -7,13 +7,12 @@ ones, such as uploading photos and video.
 
 ### History
 
-* Instagram provide a published API, but it doesn't include many
-features.
+* Instagram provides a published API, but it doesn't include many features.
 
 * There's a PHP project [Instagram-API](https://github.com/mgp25/Instagram-API) to reverse-engineer the
-interface used by the Instagram App on your phone. It is a useful resource, and a result of careful work. Changes to the API may take time to be reflected here.
+interface used by the Instagram App on your phone. It is a useful resource, and a result of careful work.
 
-* There's an initial Python port of that project, [LevPasha/Instagram-API-python](https://github.com/LevPasha/Instagram-API-python). It doesn't have a complete set of end-points, and changes to the PHP version may take time to be reflected here.
+* There's an initial Python port of that project, [LevPasha/Instagram-API-python](https://github.com/LevPasha/Instagram-API-python). It doesn't have a complete set of "endpoints" (Instagram methods).
 
 * This is a fork of that project. This is an attempt to improve it in
   several areas including:
@@ -25,16 +24,26 @@ interface used by the Instagram App on your phone. It is a useful resource, and 
       * Interfaces are simplified.
       * Introduction of iterators to make accessing lists more pythonic.
       * More compliant with coding standards.
-      * Examples have been fleshed out, and are eaier to run.
+      * Examples have been fleshed out, and are easier to run.
     * Some limited extensions to functionality.
       * Support for Two Factor Authentication has been added.
 
   To achieve these improvements, sacrifices have been made in backwards compatibility. There have been
-  several breaking changes to the API. There may be more. However, clients of Lev Pasha's project will find the changes required to use this library are minor.
+  several breaking changes to the API. There may be more. However, clients of Lev Pasha's project will find the changes required to
+  use this library are minor.
+  
+### Known Deficiencies
 
-  It is acknowledged that unit-testing remains deficient.
+  * It will never be complete:
+     * If a change happens to the Instagram API, it may take time for the change to be noticed andbe  included in the PHP project.
+     * Then it may take time to be noticed and included in the base project.
+     * Then it may take time to be noticed and included into this fork.
+    As a result, it will always be behind and not complete.
 
-  Note: Changes to the other port version may take time to be reflected here. As a result, please be aware that this project will always be behind and incomplete when it comes to Instagram's new features.
+  * Unit-testing remains deficient.
+  
+  * Instagram does not approve of the usage of these ported APIs. It may violate the Terms of Use. If they are able to detect that you are using them, they may take steps to silently block some functionality or block your account.
+
 
 ### Installation Instructions
 
@@ -63,7 +72,7 @@ interface used by the Instagram App on your phone. It is a useful resource, and 
    PASSWORD = "your_instagram_password"
    ````
 
-    The test account should **not** have two-factor authentication turned on.
+  The test account should **not** have two-factor authentication turned on.
 
   * Run the test script.
 

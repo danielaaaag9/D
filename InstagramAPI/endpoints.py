@@ -327,6 +327,13 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_timeline(self,max_id=''):
         return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&max_id='+str(max_id or ''))
 
+    def get_reels(self):
+        return self._sendrequest('feed/reels_tray/')
+    
+    def get_reel_info(self,reel_id):
+        return self._sendrequest('feed/reels_media/?reel_ids='+str(reel_id))
+
+
     def get_user_feed(self, username_id, max_id='', min_timestamp=None):
         return self._sendrequest(
             'feed/user/' + str(username_id) + '/?count=12&max_id=' + str(max_id) + '&min_timestamp=' + str(min_timestamp) +

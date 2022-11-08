@@ -324,12 +324,17 @@ class InstagramAPIEndPoints(InstagramAPIBase):
     def get_recent_activity(self):
         return self._sendrequest('news/inbox/?')
 
-    def get_timeline(self):
-        return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&')
+    def get_timeline(self,max_id=''):
+        return self._sendrequest('feed/timeline/?rank_token=' + str(self._ranktoken) + '&ranked_content=true&max_id='+str(max_id or ''))
 
     def get_user_feed(self, username_id, max_id='', min_timestamp=None):
         return self._sendrequest(
-            'feed/user/' + str(username_id) + '/?max_id=' + str(max_id) + '&min_timestamp=' + str(min_timestamp) +
+            'feed/user/' + str(username_id) + '/?count=12&max_id=' + str(max_id) + '&min_timestamp=' + str(min_timestamp) +
+            '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
+    
+    def get_username_feed(self, username, max_id='', min_timestamp=None):
+        return self._sendrequest(
+            'feed/user/' + str(username) + '/username/?count=12&max_id=' + str(max_id) + '&min_timestamp=' + str(min_timestamp) +
             '&rank_token=' + str(self._ranktoken) + '&ranked_content=true')
 
     def get_user_followers(self, username_id, max_id=None):
